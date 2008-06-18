@@ -84,14 +84,14 @@
   (cmp :pointer)
   (cmpop :pointer))
 
-;; (cffi:defcfun ("tcbdbtune" tcbdbtune) :pointer
-;;   (bdb :pointer)
-;;   (lmemb :pointer)
-;;   (nmemb :pointer)
-;;   (bnum :pointer)
-;;   (apow :pointer)
-;;   (fpow :pointer)
-;;   (opts :pointer))
+(cffi:defcfun ("tcbdbtune" tcbdbtune) :boolean
+  (bdb :pointer)
+  (lmemb :int32)
+  (nmemb :int32)
+  (bnum :int64)
+  (apow :int8)
+  (fpow :int8)
+  (opts :uint8))
 
 ;; (cffi:defcfun ("tcbdbsetcache" tcbdbsetcache) :pointer
 ;;   (bdb :pointer)
@@ -118,41 +118,41 @@
   (kstr :string)
   (vstr :string))
 
-;; (cffi:defcfun ("tcbdbputkeep" tcbdbputkeep) :pointer
-;;   (bdb :pointer)
-;;   (kbuf :pointer)
-;;   (ksiz :int)
-;;   (vbuf :pointer)
-;;   (vsiz :int))
+(cffi:defcfun ("tcbdbputkeep" tcbdbputkeep) :pointer
+  (bdb :pointer)
+  (kbuf :pointer)
+  (ksiz :int)
+  (vbuf :pointer)
+  (vsiz :int))
 
-;; (cffi:defcfun ("tcbdbputkeep2" tcbdbputkeep2) :pointer
-;;   (bdb :pointer)
-;;   (kstr :string)
-;;   (vstr :string))
+(cffi:defcfun ("tcbdbputkeep2" tcbdbputkeep2) :pointer
+  (bdb :pointer)
+  (kstr :string)
+  (vstr :string))
 
-;; (cffi:defcfun ("tcbdbputcat" tcbdbputcat) :pointer
-;;   (bdb :pointer)
-;;   (kbuf :pointer)
-;;   (ksiz :int)
-;;   (vbuf :pointer)
-;;   (vsiz :int))
+(cffi:defcfun ("tcbdbputcat" tcbdbputcat) :pointer
+  (bdb :pointer)
+  (kbuf :pointer)
+  (ksiz :int)
+  (vbuf :pointer)
+  (vsiz :int))
 
-;; (cffi:defcfun ("tcbdbputcat2" tcbdbputcat2) :pointer
-;;   (bdb :pointer)
-;;   (kstr :string)
-;;   (vstr :string))
+(cffi:defcfun ("tcbdbputcat2" tcbdbputcat2) :pointer
+  (bdb :pointer)
+  (kstr :string)
+  (vstr :string))
 
-;; (cffi:defcfun ("tcbdbputdup" tcbdbputdup) :pointer
-;;   (bdb :pointer)
-;;   (kbuf :pointer)
-;;   (ksiz :int)
-;;   (vbuf :pointer)
-;;   (vsiz :int))
+(cffi:defcfun ("tcbdbputdup" tcbdbputdup) :pointer
+  (bdb :pointer)
+  (kbuf :pointer)
+  (ksiz :int)
+  (vbuf :pointer)
+  (vsiz :int))
 
-;; (cffi:defcfun ("tcbdbputdup2" tcbdbputdup2) :pointer
-;;   (bdb :pointer)
-;;   (kstr :string)
-;;   (vstr :string))
+(cffi:defcfun ("tcbdbputdup2" tcbdbputdup2) :pointer
+  (bdb :pointer)
+  (kstr :string)
+  (vstr :string))
 
 ;; (cffi:defcfun ("tcbdbputdup3" tcbdbputdup3) :pointer
 ;;   (bdb :pointer)
@@ -245,7 +245,7 @@
 ;; (cffi:defcfun ("tcbdbsync" tcbdbsync) :pointer
 ;;   (bdb :pointer))
 
-(cffi:defcfun ("tcbdboptimize" tcbdboptimize) :pointer
+(cffi:defcfun ("tcbdboptimize" tcbdboptimize) :boolean
   (bdb :pointer)
   (lmemb :int32)
   (nmemb :int32)
@@ -1345,12 +1345,12 @@
 ;; (cffi:defcfun ("tchdbsync" tchdbsync) :pointer
 ;;   (hdb :pointer))
 
-;; (cffi:defcfun ("tchdboptimize" tchdboptimize) :pointer
-;;   (hdb :pointer)
-;;   (bnum :pointer)
-;;   (apow :pointer)
-;;   (fpow :pointer)
-;;   (opts :pointer))
+(cffi:defcfun ("tchdboptimize" tchdboptimize) :boolean
+  (hdb :pointer)
+  (bnum :int64)
+  (apow :int8)
+  (fpow :int8)
+  (opts :uint8))
 
 (cffi:defcfun ("tchdbvanish" tchdbvanish) :boolean
   (hdb :pointer))

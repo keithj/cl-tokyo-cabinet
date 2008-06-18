@@ -56,7 +56,7 @@
 (defmethod dbm-delete ((db tcab-hdb))
   (tchdbdel (ptr-of db)))
 
-(defmethod dbm-vanish ((db tcab-bdb))
+(defmethod dbm-vanish ((db tcab-hdb))
   (tcbdbvanish (ptr-of db)))
 
 (defmethod dbm-put ((db tcab-hdb) (key string) (value string) &key mode)
@@ -80,3 +80,6 @@
 
 (defmethod dbm-file-size ((db tcab-hdb))
   (tchdbfsiz (ptr-of db)))
+
+(defmethod dbm-optimize ((db tcab-hdb) &rest args)
+  (apply #'tchdboptimize (ptr-of db) args))

@@ -81,6 +81,8 @@
 
 (defgeneric dbm-file-size (db))
 
+(defgeneric dbm-optimize (db &rest args))
+
 (defgeneric raise-error (db &optional text))
 
 (defgeneric maybe-raise-error (db &optional text))
@@ -108,39 +110,6 @@
     (when (not blocking) (push noblock-flag mode-flags))))
 
 
-
-
-
-(defun foo-test (n)
-  (declare (optimize (speed 3)))
-  (let ((db (make-instance 'tcab-bdb)))
-    (set-comparator db :int32)
-    (dbm-open db "/home/keith/foo.db" :write t :create t)
-    ;; (tcbdboptimize (ptr-of db) 128 256 16381 8 10 +bdbtlarge+)
-    (tcbdboptimize (ptr-of db) 512 1024 32768 8 12 +bdbtlarge+)
-    ;; (dbm-begin db)
-    (loop
-       for i of-type fixnum from 0 below n
-       do (progn
-            (cond ((zerop (rem i 1000000))
-                   (format t "+"))
-                  ((zerop (rem i 100000))
-                   (format t ".")))
-            (dbm-put db
-                     i
-                     ;;  (format nil "key-~a" i)
-                     (make-string 32 :element-type 'base-char
-                                  :initial-element #\a))))
-    
-    ;; (db-commit db)
-    (dbm-close db))
-  
-  (let ((db (dbm-open (make-instance 'tcab-bdb)
-                      "/home/keith/foo.db")))
-    (loop
-       for i from 0 below 10
-       do (format t "~a -> ~a~%" i (dbm-get db i)))
-    (dbm-close db)))
 
 
 ;; (defclass qdbm-iterator ()

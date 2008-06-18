@@ -54,7 +54,7 @@
         (= (dbm-file-size db)
            (file-length stream)))))
 
-(test dbm-put/get/bdb/string/string ()
+(test dbm-get/bdb/string/string ()
   (with-fixture bdb-100 ()
     (is-true (loop
                 for i from 0 below 100
@@ -62,14 +62,52 @@
                 for value = (format nil "value-~a" i)
                 always (string= (dbm-get db key) value)))))
 
-(test dbm-put/get/bdb/int32/string
+(test dbm-put/bdb/string/string ()
+  (with-fixture bdb-empty ()
+    ;; Add one
+    (dbm-put db "key-one" "value-one")
+    (is (string= "value-one" (dbm-get db "key-one")))
+    ;; Keep
+    (dbm-put db "key-one" "VALUE-TWO" :mode :keep)
+    (is (string= "value-one" (dbm-get db "key-one")))
+    ;; Replace
+    (dbm-put db "key-one" "VALUE-TWO" :mode :replace)
+    (is (string= "VALUE-TWO" (dbm-get db "key-one")))
+    ;; Concat
+    (dbm-put db "key-one" "VALUE-THREE" :mode :concat)
+    (is (string= "VALUE-TWOVALUE-THREE" (dbm-get db "key-one")))
+    ;; FIXME -- test duplicate mode
+    ))
+
+(test dbm-put/bdb/int32/string ()
   (let ((db (make-instance 'tcab-bdb))
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
     (is-true (set-comparator db :int32))
     (dbm-open db bdb-filespec :write t :create t)
-    (is-true (fad:file-exists-p bdb-filespec))
+    ;; Add one
+    (dbm-put db 111 "value-one")
+    (is (string= "value-one" (dbm-get db 111)))
+    ;; Keep
+    (dbm-put db 111 "VALUE-TWO" :mode :keep)
+    (is (string= "value-one" (dbm-get db 111)))
+    ;; Replace
+    (dbm-put db 111 "VALUE-TWO" :mode :replace)
+    (is (string= "VALUE-TWO" (dbm-get db 111)))
+    ;; Concat
+    (dbm-put db 111 "VALUE-THREE" :mode :concat)
+    (is (string= "VALUE-TWOVALUE-THREE" (dbm-get db 111)))
+    ;; FIXME -- test duplicate mode
+    ))
+
+(test dbm-get/bdb/int32/string
+  (let ((db (make-instance 'tcab-bdb))
+        (bdb-filespec (namestring (iou:make-tmp-pathname
+                                   :basename "bdb" :type "db"
+                                   :tmpdir (merge-pathnames "data")))))
+    (is-true (set-comparator db :int32))
+    (dbm-open db bdb-filespec :write t :create t)
     (loop
        for i from 0 below 100
        do (dbm-put db i (format nil "value-~a" i)))

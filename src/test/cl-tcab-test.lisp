@@ -23,17 +23,27 @@
 
 (in-package :cl-tcab-test)
 
+(def-fixture bdb-empty ()
+  (let ((db (make-instance 'tcab-bdb))
+        (bdb-filespec (namestring (iou:make-tmp-pathname
+                                   :basename "bdb" :type "db"
+                                   :tmpdir (merge-pathnames "data")))))
+    (dbm-open db bdb-filespec :write t :create t)
+    (&body)
+    (is-true (dbm-close db))
+    (is-true (delete-file bdb-filespec))))
+
 (def-fixture bdb-100 ()
   (let ((db (make-instance 'tcab-bdb))
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
     (dbm-open db bdb-filespec :write t :create t)
-    (is-true (fad:file-exists-p bdb-filespec))
     (loop
        for i from 0 below 100
        do (dbm-put db (format nil "key-~a" i) (format nil "value-~a" i)))
     (&body)
+    (is-true (dbm-close db))
     (is-true (delete-file bdb-filespec))))
 
 (def-fixture hdb-100 ()
@@ -42,10 +52,10 @@
                                    :basename "hdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
     (dbm-open db hdb-filespec :write t :create t)
-    (is-true (fad:file-exists-p hdb-filespec))
     (loop
        for i from 0 below 100
        do (dbm-put db (format nil "key-~a" i) (format nil "value-~a" i)))
     (&body)
+    (is-true (dbm-close db))
     (is-true (delete-file hdb-filespec))))
 

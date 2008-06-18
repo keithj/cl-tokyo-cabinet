@@ -53,3 +53,11 @@
                      :direction :input)
         (= (dbm-file-size db)
            (file-length stream)))))
+
+(test dbm-put/get/hdb/string/string ()
+  (with-fixture hdb-100 ()
+    (is-true (loop
+                for i from 0 below 100
+                for key = (format nil "key-~a" i)
+                for value = (format nil "value-~a" i)
+                always (string= (dbm-get db key) value)))))

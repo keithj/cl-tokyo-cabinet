@@ -17,13 +17,19 @@
 
 (in-package :cl-tcab)
 
-(defmacro %bdb-key-typed-put (db key-type key value)
+(defmacro %bdb-key-typed-put (db key-type key value mode)
   `(with-foreign-object (key-ptr ,key-type)
      (setf (mem-ref key-ptr ,key-type) key)
      (with-foreign-string (value-ptr value)
-       (unless (tcbdbput (ptr-of ,db) key-ptr (foreign-type-size ,key-type)
-                         value-ptr (length ,value))
-         (raise-error ,db (format nil "key: ~a value: ~a" ,key ,value))))))
+       (let ((fn (ecase ,mode
+                   (:replace #'tcbdbput)
+                   (:keep #'tcbdbputkeep)
+                   (:concat #'tcbdbputcat)
+                   (:duplicate #'tcbdbputdup))))
+         (unless (funcall fn (ptr-of ,db)
+                          key-ptr (foreign-type-size ,key-type)
+                          value-ptr (length ,value))
+           (raise-error ,db (format nil "key: ~a value: ~a" ,key ,value)))))))
 
 (defmacro %bdb-key-typed-get (db key-type key)
   `(let ((value-ptr))
@@ -99,15 +105,20 @@
   (unless (tcbdbtranabort (ptr-of db))
     (raise-error db)))
 
-(defmethod dbm-put ((db tcab-bdb) (key string) (value string) &key mode)
-  (declare (ignore mode))
-  (unless (tcbdbput2 (ptr-of db) key value)
-    (raise-error db (format nil "key: ~a value: ~a" key value))))
+(defmethod dbm-put ((db tcab-bdb) (key string) (value string)
+                    &key (mode :replace))
+  (let ((fn (ecase mode
+              (:replace #'tcbdbput2)
+              (:keep #'tcbdbputkeep2)
+              (:concat #'tcbdbputcat2)
+              (:duplicate #'tcbdbputdup2))))
+    (unless (funcall fn (ptr-of db) key value)
+      (raise-error db (format nil "key: ~a value: ~a" key value)))))
 
-(defmethod dbm-put ((db tcab-bdb) (key integer) (value string) &key mode)
-  (declare (ignore mode))
+(defmethod dbm-put ((db tcab-bdb) (key integer) (value string)
+                    &key (mode :replace))
   (declare (type int32 key))
-  (%bdb-key-typed-put db :int32 key value))
+  (%bdb-key-typed-put db :int32 key value mode))
 
 (defmethod dbm-get ((db tcab-bdb) (key string))
   (let ((value-ptr))
@@ -129,6 +140,9 @@
 
 (defmethod dbm-file-size ((db tcab-bdb))
   (tcbdbfsiz (ptr-of db)))
+
+(defmethod dbm-optimize ((db tcab-bdb) &rest args)
+  (apply #'tcbdboptimize (ptr-of db) args))
 
 (defun %builtin-comparator (type)
   (foreign-symbol-pointer (case type
