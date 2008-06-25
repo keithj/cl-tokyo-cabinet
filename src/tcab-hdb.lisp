@@ -71,38 +71,19 @@
 
 (defmethod dbm-put ((db tcab-hdb) (key string) (value string)
                     &key (mode :replace))
-  (or (funcall (%hdb-str-put-fn mode) (ptr-of db) key value)
-      (maybe-raise-error db (format nil "(key ~a) (value ~a)" key value))))
+  (put-string->string db key value (%hdb-str-put-fn mode)))
+
+(defmethod dbm-put ((db tcab-hdb) (key string) (value vector) 
+                    &key (mode :replace))
+  (put-string->octets db key value (%hdb-put-fn mode)))
 
 (defmethod dbm-put ((db tcab-hdb) (key integer) (value string)
                     &key (mode :replace))
-  (declare (type int32 key))
-  (let ((key-len (foreign-type-size :int32))
-        (value-len (length value)))
-    (with-foreign-object (key-ptr :int32)
-      (setf (mem-ref key-ptr :int32) key)
-      (with-foreign-string (value-ptr value)
-        (or (funcall (%hdb-put-fn mode) (ptr-of db)
-                     key-ptr key-len value-ptr value-len)
-            (maybe-raise-error db (format nil "(key ~a) (value ~a)"
-                                          key value)))))))
+  (put-int32->string db key value (%hdb-put-fn mode)))
 
 (defmethod dbm-put ((db tcab-hdb) (key integer) (value vector)
                     &key (mode :replace))
- (declare (type int32 key)
-           (type (simple-array (unsigned-byte 8) (*)) value))
-(let ((key-len (foreign-type-size :int32))
-        (value-len (length value)))
-    (with-foreign-objects ((key-ptr :int32)
-                           (value-ptr :string value-len))
-      (setf (mem-ref key-ptr :int32) key)
-      (loop
-         for i from 0 below (length value)
-         do (setf (mem-aref value-ptr :unsigned-char i) (aref value i)))
-      (or (funcall (%hdb-put-fn mode) (ptr-of db)
-                   key-ptr key-len value-ptr value-len)
-          (maybe-raise-error db (format nil "(key ~a) (value ~a)"
-                                        key value))))))
+  (put-int32->octets db key value (%hdb-put-fn mode)))
 
 (defmethod dbm-num-records ((db tcab-hdb))
   (tchdbrnum (ptr-of db)))

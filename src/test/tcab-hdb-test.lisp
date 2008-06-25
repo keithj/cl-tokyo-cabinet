@@ -62,6 +62,20 @@
                 for value = (format nil "value-~a" i)
                 always (string= (dbm-get db key) value)))))
 
+(test dbm-get/hdb/string/octets
+  (with-fixture hdb-100 ()
+    (is-true (loop
+                for i from 0 below 100
+                for key = (format nil "key-~a" i)
+                for value = (format nil "value-~a" i)
+                always (string= (gpu:make-sb-string
+                                 (dbm-get db key :octets)) value)))))
+
+(test dbm-get/hdb/string/bad-type
+  (with-fixture hdb-100 ()
+    (signals error
+      (dbm-get db "key-0" :bad-type))))
+
 (test dbm-put/hdb/string/string
   (with-fixture hdb-empty ()
     ;; Add one

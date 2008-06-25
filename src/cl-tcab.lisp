@@ -126,9 +126,12 @@
         (foreign-string-free value-ptr)))))
 
 (defun get-string->octets (db key fn)
+  "Note that for the key we allocate a foreign string that is not
+null-terminated."
   (let ((value-ptr nil))
     (unwind-protect
-         (with-foreign-string ((key-ptr key-len) key)
+         (with-foreign-string ((key-ptr key-len) key
+                               :null-terminated-p nil)
            (with-foreign-object (size-ptr :int)
              (setf value-ptr (funcall fn (ptr-of db) key-ptr key-len size-ptr))
              (if (null-pointer-p value-ptr)
@@ -167,6 +170,48 @@
              (copy-foreign-value value-ptr size-ptr)))
       (when (and value-ptr (not (null-pointer-p value-ptr)))
         (foreign-string-free value-ptr)))))
+
+(defun put-string->string (db key value fn)
+  (or (funcall fn (ptr-of db) key value)
+      (maybe-raise-error db (format nil "(key ~a) (value ~a)" key value))))
+
+(defun put-string->octets (db key value fn)
+  "Note that for the key we allocate a foreign string that is not
+null-terminated."
+  (declare (type (simple-array (unsigned-byte 8) (*)) value))
+  (let ((value-len (length value)))
+    (with-foreign-string ((key-ptr key-len) key :null-terminated-p nil)
+      (with-foreign-object (value-ptr :unsigned-char value-len)
+        (or (funcall fn (ptr-of db) key-ptr key-len value-ptr value-len)
+            (maybe-raise-error db (format nil "(key ~a) (value ~a)"
+                                          key value)))))))
+
+(defun put-int32->string (db key value fn)
+  (declare (type int32 key)
+           (type string value))
+  (let ((key-len (foreign-type-size :int32))
+        (value-len (length value)))
+    (with-foreign-object (key-ptr :int32)
+      (setf (mem-ref key-ptr :int32) key)
+      (with-foreign-string (value-ptr value)
+        (or (funcall fn (ptr-of db) key-ptr key-len value-ptr value-len)
+            (maybe-raise-error db (format nil "(key ~a) (value ~a)"
+                                          key value)))))))
+
+(defun put-int32->octets (db key value fn)
+  (declare (type int32 key)
+           (type (simple-array (unsigned-byte 8) (*)) value))
+  (let ((key-len (foreign-type-size :int32))
+        (value-len (length value)))
+    (with-foreign-objects ((key-ptr :int32)
+                           (value-ptr :string value-len))
+      (setf (mem-ref key-ptr :int32) key)
+      (loop
+         for i from 0 below (length value)
+         do (setf (mem-aref value-ptr :unsigned-char i) (aref value i)))
+      (or (funcall fn (ptr-of db) key-ptr key-len value-ptr value-len)
+        (maybe-raise-error db (format nil "(key ~a) (value ~a)"
+                                      key value))))))
 
 (defun copy-foreign-value (value-ptr size-ptr)
   (let ((size (mem-ref size-ptr :int)))
