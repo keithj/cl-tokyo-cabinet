@@ -17,6 +17,8 @@
 
 (in-package :cl-tcab)
 
+(declaim (optimize (debug 3) (safety 3)))
+
 (deftype int32 ()
   "The 32bit built-in DBM key type."
   '(signed-byte 32))
@@ -41,7 +43,7 @@
          :initarg :text
          :reader text))
   (:report (lambda (condition stream)
-             (format stream "DBM error (~a): ~a~@[: ~a~]."
+             (format stream "DBM error (~a) ~a~@[: ~a~]."
                      (error-code-of condition)
                      (error-msg-of condition)
                      (text condition)))))
@@ -73,7 +75,7 @@
 
 (defgeneric dbm-put (db key value &key mode))
 
-(defgeneric dbm-get (db key))
+(defgeneric dbm-get (db key &optional type))
 
 (defgeneric dbm-iterator (db))
 
@@ -87,7 +89,7 @@
 
 (defgeneric maybe-raise-error (db &optional text))
 
-(defun validate-mode (write create truncate lock blocking)
+(defun check-mode (write create truncate lock blocking)
   (when (and create (not write))
     (error 'dbm-error
            "The CREATE argument may not be used in READ mode"))
@@ -107,7 +109,77 @@
     (when create (push create-flag mode-flags))
     (when truncate (push truncate-flag mode-flags))
     (when (not lock) (push nolock-flag mode-flags))
-    (when (not blocking) (push noblock-flag mode-flags))))
+    (when (not blocking) (push noblock-flag mode-flags))
+    (reduce #'(lambda (x y)
+                (boole boole-ior x y))
+            mode-flags)))
+
+(defun get-string->string (db key fn)
+  (let ((value-ptr nil))
+    (unwind-protect
+         (progn
+           (setf value-ptr (funcall fn (ptr-of db) key))
+           (if (null-pointer-p value-ptr)
+               (maybe-raise-error db (format nil "(key ~a)" key))
+             (foreign-string-to-lisp value-ptr)))
+      (when (and value-ptr (not (null-pointer-p value-ptr)))
+        (foreign-string-free value-ptr)))))
+
+(defun get-string->octets (db key fn)
+  (let ((value-ptr nil))
+    (unwind-protect
+         (with-foreign-string ((key-ptr key-len) key)
+           (with-foreign-object (size-ptr :int)
+             (setf value-ptr (funcall fn (ptr-of db) key-ptr key-len size-ptr))
+             (if (null-pointer-p value-ptr)
+                 (maybe-raise-error db (format nil "(key ~a)" key))
+               (copy-foreign-value value-ptr size-ptr))))
+      (when (and value-ptr (not (null-pointer-p value-ptr)))
+        (foreign-string-free value-ptr)))))
+
+(defun get-int32->string (db key fn)
+  (declare (type int32 key))
+  (let ((key-len (foreign-type-size :int32))
+        (value-ptr nil))
+    (unwind-protect
+         (with-foreign-objects ((key-ptr :int32)
+                                (size-ptr :int))
+           (setf (mem-ref key-ptr :int32) key
+                 value-ptr (funcall fn (ptr-of db) key-ptr key-len size-ptr))
+           (if (null-pointer-p value-ptr)
+               (maybe-raise-error db (format nil "(key ~a)" key))
+             (foreign-string-to-lisp value-ptr
+                                     :count (mem-ref size-ptr :int))))
+      (when (and value-ptr (not (null-pointer-p value-ptr)))
+        (foreign-string-free value-ptr)))))
+
+(defun get-int32->octets (db key fn)
+  (declare (type int32 key))
+  (let ((key-len (foreign-type-size :int32))
+        (value-ptr nil))
+    (unwind-protect
+         (with-foreign-objects ((key-ptr :int32)
+                                (size-ptr :int))
+           (setf (mem-ref key-ptr :int32) key
+                 value-ptr (funcall fn (ptr-of db) key-ptr key-len size-ptr))
+           (if (null-pointer-p value-ptr)
+               (maybe-raise-error db (format nil "(key ~a)" key))
+             (copy-foreign-value value-ptr size-ptr)))
+      (when (and value-ptr (not (null-pointer-p value-ptr)))
+        (foreign-string-free value-ptr)))))
+
+(defun copy-foreign-value (value-ptr size-ptr)
+  (let ((size (mem-ref size-ptr :int)))
+    (loop
+       with value = (make-array size :element-type '(unsigned-byte 8))
+       for i from 0 below size
+       do (setf (aref value i) (mem-aref value-ptr :unsigned-char i))
+       finally (return value))))
+
+
+
+
+
 
 
 

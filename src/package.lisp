@@ -77,6 +77,7 @@
    #:tcbdbecode
    #:tcbdbsetcmpfunc
    #:tcbdbtune
+   #:tcbdbsetcache
    #:tcbdbopen
    #:tcbdbclose
    #:tcbdbput
@@ -87,42 +88,83 @@
    #:tcbdbputcat2
    #:tcbdbputdup
    #:tcbdbputdup2
-   
+   #:tcbdbputdup3
+   #:tcbdbout
+   #:tcbdbout2
+   #:tcbdbout3
    #:tcbdbget
    #:tcbdbget2
 
+   #:tcbdbvnum
+   #:tcbdbvnum2
+   #:tcbdbvsiz
+   #:tcbdbvsiz2
+
+   #:tcbdbsync
    #:tcbdboptimize
    #:tcbdbvanish
-
+   #:tcbdbcopy
    #:tcbdbtranbegin
    #:tcbdbtrancommit
    #:tcbdbtranabort
-
+   #:tcbdbpath   
    #:tcbdbrnum
    #:tcbdbfsiz
-
+   #:tcbdbcurnew
+   #:tcbdbcurdel
+   #:tcbdbcurfirst
+   #:tcbdbcurlast
+   #:tcbdbcurjump
+   #:tcbdbcurjump2
+   #:tcbdbcurprev
+   #:tcbdbcurnext
+   #:tcbdbcurput
+   #:tcbdbcurput2
+   #:tcbdbcurout
+   #:tcbdbcurkey
+   #:tcbdbcurkey2
+   #:tcbdbcurkey3
+   #:tcbdbcurval
+   #:tcbdbcurval2
+   #:tcbdbcurval3
+   #:tcbdbcurrec
+   
    #:tchdberrmsg
    #:tchdbnew
    #:tchdbdel
    #:tchdbecode
 
+   #:tchdbtune
+   #:tchdbsetcache
    #:tchdbopen
    #:tchdbclose
    #:tchdbput
    #:tchdbput2
-
+   #:tchdbputkeep
+   #:tchdbputkeep2
+   #:tchdbputcat
+   #:tchdbputcat2
+   #:tchdbputasync
+   #:tchdbputasync2
+   #:tchdbout
+   #:tchdbout2
    #:tchdbget
    #:tchdbget2
 
-   
+   #:tchdbvsiz
+   #:tchdbvsiz2
+   #:tchdbiterinit
+   #:tchdbiternext
+   #:tchdbiternext2
+   #:tchdbiternext3
+
+   #:tchdbsync
    #:tchdboptimize
    #:tchdbvanish
+
    #:tchdbpath
    #:tchdbrnum
-   #:tchdbfsiz
-   
-   
-   ))
+   #:tchdbfsiz))
 
 (defpackage #:cl-tcab
   (:use #:common-lisp :cffi :tcab-cffi :cl-gp-utilities)

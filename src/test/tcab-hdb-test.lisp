@@ -54,10 +54,51 @@
         (= (dbm-file-size db)
            (file-length stream)))))
 
-(test dbm-put/get/hdb/string/string ()
+(test dbm-put/get/hdb/string/string
   (with-fixture hdb-100 ()
     (is-true (loop
                 for i from 0 below 100
                 for key = (format nil "key-~a" i)
                 for value = (format nil "value-~a" i)
                 always (string= (dbm-get db key) value)))))
+
+(test dbm-put/hdb/string/string
+  (with-fixture hdb-empty ()
+    ;; Add one
+    (is-true (dbm-put db "key-one" "value-one"))
+    (is (string= "value-one" (dbm-get db "key-one")))
+    ;; Keep
+    (signals dbm-error
+        (dbm-put db "key-one" "VALUE-TWO" :mode :keep))
+    (is (string= "value-one" (dbm-get db "key-one")))
+    ;; Replace
+    (is-true (dbm-put db "key-one" "VALUE-TWO" :mode :replace))
+    (is (string= "VALUE-TWO" (dbm-get db "key-one")))
+    ;; Concat
+    (is-true (dbm-put db "key-one" "VALUE-THREE" :mode :concat))
+    (is (string= "VALUE-TWOVALUE-THREE" (dbm-get db "key-one")))))
+
+(test dbm-put/hdb/int32/string ()
+ (with-fixture hdb-empty ()
+    ;; Add one
+    (is-true (dbm-put db 111 "value-one"))
+    (is (string= "value-one" (dbm-get db 111)))
+    ;; Keep
+    (signals dbm-error
+        (dbm-put db 111 "VALUE-TWO" :mode :keep))
+    ;; Replace
+    (is-true (dbm-put db 111 "VALUE-TWO" :mode :replace))
+    (is (string= "VALUE-TWO" (dbm-get db 111)))
+    ;; Concat
+    (is-true (dbm-put db 111 "VALUE-THREE" :mode :concat))
+    (is (string= "VALUE-TWOVALUE-THREE" (dbm-get db 111)))))
+
+(test dbm-get/hdb/int32/string
+ (with-fixture hdb-empty ()
+    (loop
+       for i from 0 below 100
+       do (dbm-put db i (format nil "value-~a" i)))
+    (is-true (loop
+                for i from 0 below 100
+                for value = (format nil "value-~a" i)
+                always (string= (dbm-get db i) value)))))

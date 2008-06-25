@@ -30,8 +30,8 @@
                                    :tmpdir (merge-pathnames "data")))))
     (dbm-open db bdb-filespec :write t :create t)
     (&body)
-    (is-true (dbm-close db))
-    (is-true (delete-file bdb-filespec))))
+    (dbm-close db)
+    (delete-file bdb-filespec)))
 
 (def-fixture bdb-100 ()
   (let ((db (make-instance 'tcab-bdb))
@@ -43,11 +43,21 @@
        for i from 0 below 100
        do (dbm-put db (format nil "key-~a" i) (format nil "value-~a" i)))
     (&body)
-    (is-true (dbm-close db))
-    (is-true (delete-file bdb-filespec))))
+    (dbm-close db)
+    (delete-file bdb-filespec)))
+
+(def-fixture hdb-empty ()
+  (let ((db (make-instance 'tcab-hdb))
+        (bdb-filespec (namestring (iou:make-tmp-pathname
+                                   :basename "hdb" :type "db"
+                                   :tmpdir (merge-pathnames "data")))))
+    (dbm-open db bdb-filespec :write t :create t)
+    (&body)
+    (dbm-close db)
+    (delete-file bdb-filespec)))
 
 (def-fixture hdb-100 ()
-  (let ((db (make-instance 'tcab-bdb))
+  (let ((db (make-instance 'tcab-hdb))
         (hdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "hdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
@@ -56,6 +66,5 @@
        for i from 0 below 100
        do (dbm-put db (format nil "key-~a" i) (format nil "value-~a" i)))
     (&body)
-    (is-true (dbm-close db))
-    (is-true (delete-file hdb-filespec))))
-
+    (dbm-close db)
+    (delete-file hdb-filespec)))
