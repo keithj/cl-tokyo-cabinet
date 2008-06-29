@@ -31,8 +31,8 @@
                                    :tmpdir (merge-pathnames "data")))))
     ;; Can't create a new DB in read-only mode
     (signals dbm-error
-      (dbm-open db bdb-filespec :write nil :create t))
-    (dbm-open db bdb-filespec :write t :create t)
+      (dbm-open db bdb-filespec :read :create))
+    (dbm-open db bdb-filespec :write :create)
     (is-true (fad:file-exists-p bdb-filespec))
     (is-true (delete-file bdb-filespec))))
 
@@ -49,8 +49,7 @@
 
 (test dbm-file-size/bdb
   (with-fixture bdb-100 ()
-    (with-open-file (stream bdb-filespec
-                     :direction :input)
+    (with-open-file (stream bdb-filespec :direction :input)
         (= (dbm-file-size db)
            (file-length stream)))))
 
@@ -97,7 +96,7 @@
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
     (is-true (set-comparator db :int32))
-    (dbm-open db bdb-filespec :write t :create t)
+    (dbm-open db bdb-filespec :write :create)
     ;; Add one
     (is-true (dbm-put db 111 "value-one"))
     (is (string= "value-one" (dbm-get db 111)))
@@ -119,7 +118,7 @@
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
     (is-true (set-comparator db :int32))
-    (dbm-open db bdb-filespec :write t :create t)
+    (dbm-open db bdb-filespec :write :create)
     (loop
        for i from 0 below 100
        do (dbm-put db i (format nil "value-~a" i)))
@@ -127,5 +126,28 @@
                 for i from 0 below 100
                 for value = (format nil "value-~a" i)
                 always (string= (dbm-get db i) value)))
+    (dbm-close db)
+    (delete-file bdb-filespec)))
+
+(test dbm-iter/bdb/int32/string
+  (let ((db (make-instance 'tcab-bdb))
+        (bdb-filespec (namestring (iou:make-tmp-pathname
+                                   :basename "bdb" :type "db"
+                                   :tmpdir (merge-pathnames "data")))))
+    (is-true (set-comparator db :int32))
+    (dbm-open db bdb-filespec :write :create)
+    (loop
+       for i from 0 below 100
+       do (dbm-put db i (format nil "value-~a" i)))
+    (let ((iter (iter-open db)))
+      (iter-first iter)
+      (is-true (loop
+                  for i from 0 below 100
+                  always (prog1
+                             (and (= i (iter-key iter :integer))
+                                  (string= (format nil "value-~a" i)
+                                           (iter-get iter)))
+                           (iter-next iter))))
+      (iter-close iter))
     (dbm-close db)
     (delete-file bdb-filespec)))

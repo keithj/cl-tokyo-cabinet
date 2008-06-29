@@ -39,15 +39,9 @@
           (t
            (raise-error db text)))))
 
-(defmethod dbm-open ((db tcab-bdb) filename &key write create truncate
-                     (lock t) (blocking nil))
-  (check-mode write create truncate lock blocking)
-  (let ((mode-flags (combine-mode-flags
-                     write create truncate lock blocking
-                     +bdboreader+ +bdbowriter+ +bdbocreat+
-                     +bdbotrunc+ +bdbonolck+ +bdbolcknb+))
-        (db-ptr (ptr-of db)))
-    (unless (tcbdbopen db-ptr filename mode-flags) ; opens db by side-effect
+(defmethod dbm-open ((db tcab-bdb) filespec &rest mode)
+  (let ((db-ptr (ptr-of db)))
+    (unless (tcbdbopen db-ptr filespec mode) ; opens db by side-effect
       (let* ((code (tcbdbecode db-ptr))
              (msg (tcbdberrmsg code)))
         (tcbdbdel db-ptr) ; clean up on error
@@ -101,8 +95,91 @@
                     &key (mode :replace))
   (put-int32->octets db key value (%bdb-put-fn mode)))
 
+(defmethod dbm-rem ((db tcab-bdb) (key string) &key remove-dups)
+  (if remove-dups
+      (rem-string->duplicates db key #'tcbdbout3)
+    (rem-string->value db key #'tcbdbout2)))
+
+(defmethod dbm-rem ((db tcab-bdb) (key integer) &key remove-dups)
+  (if remove-dups
+      (rem-int32->value db key #'tcbdbout3)
+    (rem-int32->value db key #'tcbdbout)))
+
+(defmethod iter-open ((db tcab-bdb))
+  (make-instance 'bdb-iterator :ptr (tcbdbcurnew (ptr-of db))))
+
+(defmethod iter-close ((iter bdb-iterator))
+  (tcbdbcurdel (ptr-of iter)))
+
+(defmethod iter-first ((iter bdb-iterator))
+  (tcbdbcurfirst (ptr-of iter)))
+
+(defmethod iter-last ((iter bdb-iterator))
+  (tcbdbcurlast (ptr-of iter)))
+
+(defmethod iter-prev ((iter bdb-iterator))
+  (tcbdbcurprev (ptr-of iter)))
+
+(defmethod iter-next ((iter bdb-iterator))
+  (tcbdbcurnext (ptr-of iter)))
+  
+(defmethod iter-jump ((iter bdb-iterator) (key string))
+  (tcbdbcurjump2 (ptr-of iter) key))
+
+(defmethod iter-jump ((iter bdb-iterator) (key integer))
+  (declare (type int32 key))
+  (with-foreign-object (key-ptr :int32)
+      (setf (mem-ref key-ptr :int32) key)
+      (tcbdbcurjump (ptr-of iter) key-ptr (foreign-type-size :int32))))
+
+(defmethod iter-get ((iter bdb-iterator) &optional (type :string))
+  (let ((value-ptr nil))
+    (unwind-protect
+         (with-foreign-object (size-ptr :int)
+           (setf value-ptr (tcbdbcurval (ptr-of iter) size-ptr))
+           (unless (null-pointer-p value-ptr)
+             (ecase type
+               (:string (foreign-string-to-lisp value-ptr :count
+                                                (mem-ref size-ptr :int)))
+               (:integer (mem-ref value-ptr :int32))
+               (:octets (copy-foreign-value value-ptr size-ptr)))))
+      (when (and value-ptr (not (null-pointer-p value-ptr)))
+        (foreign-free value-ptr)))))
+
+(defmethod iter-put ((iter bdb-iterator) (value string)
+                     &key (mode :current))
+  (tcbdbcurput2 (ptr-of iter) value (%bdb-iter-mode mode)))
+
+(defmethod iter-put ((iter bdb-iterator) (value vector)
+                     &key (mode :current))
+  (declare (type (vector (unsigned-byte 8)) value))
+  (let ((value-len (length value)))
+    (with-foreign-object (value-ptr :unsigned-char value-len)
+      (tcbdbcurput (ptr-of iter) value-ptr value-len (%bdb-iter-mode mode)))))
+
+(defmethod iter-rem ((iter bdb-iterator))
+  (tcbdbcurout (ptr-of iter)))
+
+(defmethod iter-key ((iter bdb-iterator) &optional (type :string))
+  (let ((key-ptr nil))
+    (unwind-protect
+         (with-foreign-object (size-ptr :int)
+           (setf key-ptr (tcbdbcurkey (ptr-of iter) size-ptr))
+           (unless (null-pointer-p key-ptr)
+             (ecase type
+               (:string (foreign-string-to-lisp key-ptr :count
+                                                (mem-ref size-ptr :int)))
+               (:integer (mem-ref key-ptr :int32))
+               (:octets (copy-foreign-value key-ptr size-ptr)))))
+      (when (and key-ptr (not (null-pointer-p key-ptr)))
+        (foreign-free key-ptr)))))
+
+
 (defmethod dbm-num-records ((db tcab-bdb))
   (tcbdbrnum (ptr-of db)))
+
+(defmethod dbm-file-namestring ((db tcab-bdb))
+  (tcbdbpath (ptr-of db)))
 
 (defmethod dbm-file-size ((db tcab-bdb))
   (tcbdbfsiz (ptr-of db)))
@@ -130,3 +207,9 @@
                             (:decimal "tcbdbcmpdecimal")
                             (:int32 "tcbdbcmpint32")
                             (:int64 "tcbdbcmpint64"))))
+
+(defun %bdb-iter-mode (mode)
+  (ecase mode
+    (:current +bdbcpcurrent+)
+    (:prev +bdbcpbefore+)
+    (:after +bdbcpafter+)))

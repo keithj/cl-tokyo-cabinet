@@ -42,28 +42,33 @@
 (defconstant +tcenorec+ 22)
 (defconstant +tcemisc+ 9999)
 
-(defconstant +bdboreader+ 1)
-(defconstant +bdbowriter+ 2)
-(defconstant +bdbocreat+ 4)
-(defconstant +bdbotrunc+ 8)
-(defconstant +bdbonolck+ 16)
-(defconstant +bdbolcknb+ 32)
 (defconstant +bdbtlarge+ 1)
 (defconstant +bdbtdeflate+ 2)
 (defconstant +bdbttcbs+ 4)
+
 (defconstant +bdbcpcurrent+ 0)
 (defconstant +bdbcpbefore+ 1)
 (defconstant +bdbcpafter+ 2)
 
-(defconstant +hdboreader+ 1)
-(defconstant +hdbowriter+ 2)
-(defconstant +hdbocreat+ 4)
-(defconstant +hdbotrunc+ 8)
-(defconstant +hdbonolck+ 16)
-(defconstant +hdbolcknb+ 32)
 (defconstant +hdbtlarge+ 1)
 (defconstant +hdbtdeflate+ 2)
 (defconstant +hdbttcbs+ 4)
+
+(defbitfield bdb-open-flags
+  :read
+  :write
+  :create
+  :truncate
+  :noblock
+  :nolock)
+
+(defbitfield hdb-open-flags
+  :read
+  :write
+  :create
+  :truncate
+  :noblock
+  :nolock)
 
 (cffi:defcfun ("tcbdberrmsg" tcbdberrmsg) :string
   (ecode :int))
@@ -101,7 +106,7 @@
 (cffi:defcfun ("tcbdbopen" tcbdbopen) :boolean
   (bdb :pointer)
   (path :string)
-  (omode :int))
+  (mode bdb-open-flags))
 
 (cffi:defcfun ("tcbdbclose" tcbdbclose) :boolean
   (bdb :pointer))
@@ -320,25 +325,25 @@
 (cffi:defcfun ("tcbdbcurout" tcbdbcurout) :pointer
   (cur :pointer))
 
-(cffi:defcfun ("tcbdbcurkey" tcbdbcurkey) :string
+(cffi:defcfun ("tcbdbcurkey" tcbdbcurkey) :pointer
   (cur :pointer)
   (sp :pointer))
 
-(cffi:defcfun ("tcbdbcurkey2" tcbdbcurkey2) :string
+(cffi:defcfun ("tcbdbcurkey2" tcbdbcurkey2) :pointer
   (cur :pointer))
 
-(cffi:defcfun ("tcbdbcurkey3" tcbdbcurkey3) :string
+(cffi:defcfun ("tcbdbcurkey3" tcbdbcurkey3) :pointer
   (cur :pointer)
   (sp :pointer))
 
-(cffi:defcfun ("tcbdbcurval" tcbdbcurval) :string
+(cffi:defcfun ("tcbdbcurval" tcbdbcurval) :pointer
   (cur :pointer)
   (sp :pointer))
 
-(cffi:defcfun ("tcbdbcurval2" tcbdbcurval2) :string
+(cffi:defcfun ("tcbdbcurval2" tcbdbcurval2) :pointer
   (cur :pointer))
 
-(cffi:defcfun ("tcbdbcurval3" tcbdbcurval3) :string
+(cffi:defcfun ("tcbdbcurval3" tcbdbcurval3) :pointer
   (cur :pointer)
   (sp :pointer))
 
@@ -499,7 +504,7 @@
 (cffi:defcfun ("tchdbopen" tchdbopen) :boolean
   (hdb :pointer)
   (path :string)
-  (omode :int))
+  (mode hdb-open-flags))
 
 (cffi:defcfun ("tchdbclose" tchdbclose) :boolean
   (hdb :pointer))

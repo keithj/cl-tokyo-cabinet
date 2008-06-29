@@ -58,8 +58,17 @@
 (defclass tcab-hdb (tcab-dbm)
   ())
 
-(defgeneric dbm-open (name db-type
-                      &key write create truncate lock blocking))
+(defclass tcab-iterator ()
+  ((ptr :initarg :ptr
+        :accessor ptr-of)))
+
+(defclass bdb-iterator (tcab-iterator)
+  ())
+
+(defclass hdb-iterator (tcab-iterator)
+  ())
+
+(defgeneric dbm-open (name db-type &rest mode))
 
 (defgeneric dbm-close (db))
 
@@ -77,42 +86,45 @@
 
 (defgeneric dbm-get (db key &optional type))
 
-(defgeneric dbm-iterator (db))
+(defgeneric dbm-rem (db key &key remove-dups))
+
+(defgeneric iter-open (db))
+
+(defgeneric iter-close (iter))
+
+(defgeneric iter-first (iter))
+
+(defgeneric iter-last (iter))
+
+(defgeneric iter-prev (iter))
+
+(defgeneric iter-next (iter))
+
+(defgeneric iter-jump (iter key))
+
+(defgeneric iter-get (iter &optional :type))
+
+(defgeneric iter-put (iter value &key mode))
+
+(defgeneric iter-rem (iter))
+
+(defgeneric iter-key (iter &optional :type))
 
 (defgeneric dbm-num-records (db))
+
+(defgeneric dbm-file-namestring (db))
 
 (defgeneric dbm-file-size (db))
 
 (defgeneric dbm-optimize (db &rest args))
 
+(defgeneric dbm-cache (db &rest args))
+
+(defgeneric set-comparator (db fn))
+
 (defgeneric raise-error (db &optional text))
 
 (defgeneric maybe-raise-error (db &optional text))
-
-(defun check-mode (write create truncate lock blocking)
-  (when (and create (not write))
-    (error 'dbm-error
-           "The CREATE argument may not be used in READ mode"))
-  (when (and truncate (not write))
-    (error 'dbm-error
-           "The TRUNCATE argument may not be used in READ mode"))
-  (when (and blocking (not lock))
-    (error 'dbm-error
-           "The BLOCKING argument may not be used without the LOCK argument")))
-
-(defun combine-mode-flags (write create truncate lock blocking
-                           read-flag write-flag create-flag
-                           truncate-flag nolock-flag noblock-flag)
-  (let ((mode-flags (if write
-                        (list write-flag)
-                      (list read-flag))))
-    (when create (push create-flag mode-flags))
-    (when truncate (push truncate-flag mode-flags))
-    (when (not lock) (push nolock-flag mode-flags))
-    (when (not blocking) (push noblock-flag mode-flags))
-    (reduce #'(lambda (x y)
-                (boole boole-ior x y))
-            mode-flags)))
 
 (defun get-string->string (db key fn)
   (let ((value-ptr nil))
@@ -178,7 +190,7 @@ null-terminated."
 (defun put-string->octets (db key value fn)
   "Note that for the key we allocate a foreign string that is not
 null-terminated."
-  (declare (type (simple-array (unsigned-byte 8) (*)) value))
+  (declare (type (vector (unsigned-byte 8)) value))
   (let ((value-len (length value)))
     (with-foreign-string ((key-ptr key-len) key :null-terminated-p nil)
       (with-foreign-object (value-ptr :unsigned-char value-len)
@@ -200,11 +212,11 @@ null-terminated."
 
 (defun put-int32->octets (db key value fn)
   (declare (type int32 key)
-           (type (simple-array (unsigned-byte 8) (*)) value))
+           (type (vector (unsigned-byte 8)) value))
   (let ((key-len (foreign-type-size :int32))
         (value-len (length value)))
     (with-foreign-objects ((key-ptr :int32)
-                           (value-ptr :string value-len))
+                           (value-ptr :unsigned-char value-len))
       (setf (mem-ref key-ptr :int32) key)
       (loop
          for i from 0 below (length value)
@@ -213,6 +225,24 @@ null-terminated."
         (maybe-raise-error db (format nil "(key ~a) (value ~a)"
                                       key value))))))
 
+(defun rem-string->value (db key fn)
+  (declare (type string key))
+  (or (funcall fn (ptr-of db) key)
+      (maybe-raise-error db (format nil "(key ~a)" key))))
+
+(defun rem-string->duplicates (db key fn)
+  (declare (type string key))
+  (with-foreign-string ((key-ptr key-len) key :null-terminated-p nil)
+    (or (funcall fn (ptr-of db) key key-len)
+        (maybe-raise-error db (format nil "(key ~a)" key)))))
+
+(defun rem-int32->value (db key fn)
+  (declare (type int32 key))
+  (with-foreign-object (key-ptr :int32)
+    (setf (mem-ref key-ptr :int32) key)
+    (or (funcall fn (ptr-of db) key-ptr (foreign-type-size :int32))
+        (maybe-raise-error db (format nil "(key ~a)" key)))))
+
 (defun copy-foreign-value (value-ptr size-ptr)
   (let ((size (mem-ref size-ptr :int)))
     (loop
@@ -220,13 +250,6 @@ null-terminated."
        for i from 0 below size
        do (setf (aref value i) (mem-aref value-ptr :unsigned-char i))
        finally (return value))))
-
-
-
-
-
-
-
 
 
 ;; (defclass qdbm-iterator ()

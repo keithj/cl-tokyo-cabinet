@@ -35,15 +35,9 @@
           (t
            (raise-error db text)))))
 
-(defmethod dbm-open ((db tcab-hdb) filename &key write create truncate
-                     (lock t) (blocking nil))
-  (check-mode write create truncate lock blocking)
-  (let ((mode-flags (combine-mode-flags
-                     write create truncate lock blocking
-                     +hdboreader+ +hdbowriter+ +hdbocreat+
-                     +hdbotrunc+ +hdbonolck+ +hdbolcknb+))
-        (db-ptr (ptr-of db)))
-    (unless (tchdbopen db-ptr filename mode-flags) ; opens db by side-effect
+(defmethod dbm-open ((db tcab-hdb) filename &rest mode)
+  (let ((db-ptr (ptr-of db)))
+    (unless (tchdbopen db-ptr filename mode) ; opens db by side-effect
       (let* ((code (tchdbecode db-ptr))
              (msg (tchdberrmsg code)))
         (tchdbdel db-ptr) ; clean up on error
@@ -85,8 +79,19 @@
                     &key (mode :replace))
   (put-int32->octets db key value (%hdb-put-fn mode)))
 
+(defmethod dbm-rem ((db tcab-hdb) (key string) &key remove-dups)
+  (declare (ignore remove-dups))
+  (rem-string->value db key #'tchdbout2))
+
+(defmethod dbm-rem ((db tcab-hdb) (key integer) &key remove-dups)
+  (declare (ignore remove-dups))
+  (rem-int32->value db key #'tchdbout))
+
 (defmethod dbm-num-records ((db tcab-hdb))
   (tchdbrnum (ptr-of db)))
+
+(defmethod dbm-file-namestring ((db tcab-hdb))
+  (tchdbpath (ptr-of db)))
 
 (defmethod dbm-file-size ((db tcab-hdb))
   (tchdbfsiz (ptr-of db)))

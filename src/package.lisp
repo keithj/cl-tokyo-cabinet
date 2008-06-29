@@ -67,7 +67,9 @@
    #:+hdbtlarge+
    #:+hdbtdeflate+
    #:+hdbttcbs+
-   
+
+   #:bdb-open-flags
+   #:hdb-open-flags
    ;; Variables
 
    ;; Functions
@@ -187,11 +189,24 @@
    #:dbm-vanish
    #:dbm-put
    #:dbm-get
+   #:dbm-rem
+   #:iter-open
+   #:iter-first
+   #:iter-last
+   #:iter-prev
+   #:iter-next
+   #:iter-jump
+   #:iter-put
+   #:iter-rem
+   #:iter-key
+   #:iter-get
+   #:iter-close
+   
    #:dbm-num-records
    #:dbm-file-size
    #:dbm-optimize
+   #:dbm-cache
    #:set-comparator
    
    ;; Functions
-
    ))

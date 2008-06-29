@@ -28,7 +28,7 @@
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
-    (dbm-open db bdb-filespec :write t :create t)
+    (dbm-open db bdb-filespec :write :create)
     (&body)
     (dbm-close db)
     (delete-file bdb-filespec)))
@@ -38,7 +38,7 @@
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
-    (dbm-open db bdb-filespec :write t :create t)
+    (dbm-open db bdb-filespec :write :create)
     (loop
        for i from 0 below 100
        do (dbm-put db (format nil "key-~a" i) (format nil "value-~a" i)))
@@ -51,7 +51,7 @@
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "hdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
-    (dbm-open db bdb-filespec :write t :create t)
+    (dbm-open db bdb-filespec :write :create)
     (&body)
     (dbm-close db)
     (delete-file bdb-filespec)))
@@ -61,7 +61,7 @@
         (hdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "hdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
-    (dbm-open db hdb-filespec :write t :create t)
+    (dbm-open db hdb-filespec :write :create)
     (loop
        for i from 0 below 100
        do (dbm-put db (format nil "key-~a" i) (format nil "value-~a" i)))

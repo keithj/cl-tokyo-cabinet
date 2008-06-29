@@ -31,8 +31,8 @@
                                    :tmpdir (merge-pathnames "data")))))
     ;; Can't create a new DB in read-only mode
     (signals dbm-error
-      (dbm-open db hdb-filespec :write nil :create t))
-    (dbm-open db hdb-filespec :write t :create t)
+      (dbm-open db hdb-filespec :read :create))
+    (dbm-open db hdb-filespec :write :create)
     (is-true (fad:file-exists-p hdb-filespec))
     (is-true (delete-file hdb-filespec))))
 
@@ -49,8 +49,7 @@
 
 (test dbm-file-size/hdb
   (with-fixture hdb-100 ()
-    (with-open-file (stream hdb-filespec
-                     :direction :input)
+    (with-open-file (stream hdb-filespec :direction :input)
         (= (dbm-file-size db)
            (file-length stream)))))
 
