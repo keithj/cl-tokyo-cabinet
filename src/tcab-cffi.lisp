@@ -42,17 +42,9 @@
 (defconstant +tcenorec+ 22)
 (defconstant +tcemisc+ 9999)
 
-(defconstant +bdbtlarge+ 1)
-(defconstant +bdbtdeflate+ 2)
-(defconstant +bdbttcbs+ 4)
-
 (defconstant +bdbcpcurrent+ 0)
 (defconstant +bdbcpbefore+ 1)
 (defconstant +bdbcpafter+ 2)
-
-(defconstant +hdbtlarge+ 1)
-(defconstant +hdbtdeflate+ 2)
-(defconstant +hdbttcbs+ 4)
 
 (defbitfield bdb-open-flags
   :read
@@ -69,6 +61,18 @@
   :truncate
   :noblock
   :nolock)
+
+(defbitfield bdb-options
+  :large
+  :deflate
+  :tcbs
+  (:defaults #xff))
+
+(defbitfield hdb-options
+  :large
+  :deflate
+  :tcbs
+  (:defaults #xff))
 
 (cffi:defcfun ("tcbdberrmsg" tcbdberrmsg) :string
   (ecode :int))
@@ -96,7 +100,7 @@
   (bnum :int64)
   (apow :int8)
   (fpow :int8)
-  (opts :uint8))
+  (opts bdb-options))
 
 (cffi:defcfun ("tcbdbsetcache" tcbdbsetcache) :pointer
   (bdb :pointer)
@@ -257,7 +261,7 @@
   (bnum :int64)
   (apow :int8)
   (fpow :int8)
-  (opts :uint8))
+  (opts bdb-options))
 
 (cffi:defcfun ("tcbdbvanish" tcbdbvanish) :boolean
   (bdb :pointer))
@@ -495,7 +499,7 @@
   (bnum :int64)
   (apow :int8)
   (fpow :int8)
-  (opts :uint8))
+  (opts hdb-options))
 
 (cffi:defcfun ("tchdbsetcache" tchdbsetcache) :boolean
   (hdb :pointer)
@@ -626,7 +630,7 @@
   (bnum :int64)
   (apow :int8)
   (fpow :int8)
-  (opts :uint8))
+  (opts hdb-options))
 
 (cffi:defcfun ("tchdbvanish" tchdbvanish) :boolean
   (hdb :pointer))

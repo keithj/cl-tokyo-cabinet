@@ -17,7 +17,7 @@
 
 (in-package :cl-tcab)
 
-(declaim (optimize (debug 3) (safety 3)))
+;; (declaim (optimize (debug 3) (safety 3)))
 
 (deftype int32 ()
   "The 32bit built-in DBM key type."
@@ -126,6 +126,17 @@
 
 (defgeneric maybe-raise-error (db &optional text))
 
+(defun validate-open-mode (mode)
+  (cond ((and (member :create mode)
+              (not (member :write mode)))
+         (error 'dbm-error
+           "The :CREATE argument may not be used in :READ mode"))
+        ((and (member :truncate mode)
+              (not (member :write mode)))
+         (error 'dbm-error
+                "The :TRUNCATE argument may not be used in :READ mode"))
+        (t t)))
+
 (defun get-string->string (db key fn)
   (let ((value-ptr nil))
     (unwind-protect
@@ -183,6 +194,19 @@ null-terminated."
       (when (and value-ptr (not (null-pointer-p value-ptr)))
         (foreign-string-free value-ptr)))))
 
+(defun get-string-int32 (db key fn)
+  (let ((value-ptr nil))
+    (unwind-protect
+         (with-foreign-string ((key-ptr key-len) key
+                               :null-terminated-p nil)
+           (with-foreign-object (size-ptr :int)
+             (setf value-ptr (funcall fn (ptr-of db) key-ptr key-len size-ptr))
+             (if (null-pointer-p value-ptr)
+                 (maybe-raise-error db (format nil "(key ~a)" key))
+               (mem-ref value-ptr :int))))
+      (when (and value-ptr (not (null-pointer-p value-ptr)))
+        (foreign-free value-ptr)))))
+
 (defun put-string->string (db key value fn)
   (or (funcall fn (ptr-of db) key value)
       (maybe-raise-error db (format nil "(key ~a) (value ~a)" key value))))
@@ -194,13 +218,15 @@ null-terminated."
   (let ((value-len (length value)))
     (with-foreign-string ((key-ptr key-len) key :null-terminated-p nil)
       (with-foreign-object (value-ptr :unsigned-char value-len)
+        (loop
+           for i from 0 below value-len
+           do (setf (mem-aref value-ptr :unsigned-char i) (aref value i)))
         (or (funcall fn (ptr-of db) key-ptr key-len value-ptr value-len)
             (maybe-raise-error db (format nil "(key ~a) (value ~a)"
                                           key value)))))))
 
 (defun put-int32->string (db key value fn)
-  (declare (type int32 key)
-           (type string value))
+  (declare (type int32 key))
   (let ((key-len (foreign-type-size :int32))
         (value-len (length value)))
     (with-foreign-object (key-ptr :int32)
@@ -219,19 +245,28 @@ null-terminated."
                            (value-ptr :unsigned-char value-len))
       (setf (mem-ref key-ptr :int32) key)
       (loop
-         for i from 0 below (length value)
+         for i from 0 below value-len
          do (setf (mem-aref value-ptr :unsigned-char i) (aref value i)))
       (or (funcall fn (ptr-of db) key-ptr key-len value-ptr value-len)
         (maybe-raise-error db (format nil "(key ~a) (value ~a)"
                                       key value))))))
 
+(defun put-string->int32 (db key value fn)
+  (declare (type int32 value))
+  (let ((key-len (length key))
+        (value-len (foreign-type-size :int32)))
+    (with-foreign-string (key-ptr key)
+      (with-foreign-object (value-ptr :int32)
+        (setf (mem-ref value-ptr :int32) value)
+        (or (funcall fn (ptr-of db) key-ptr key-len value-ptr value-len)
+            (maybe-raise-error db (format nil "(key ~a) (value ~a)"
+                                          key value)))))))
+
 (defun rem-string->value (db key fn)
-  (declare (type string key))
   (or (funcall fn (ptr-of db) key)
       (maybe-raise-error db (format nil "(key ~a)" key))))
 
 (defun rem-string->duplicates (db key fn)
-  (declare (type string key))
   (with-foreign-string ((key-ptr key-len) key :null-terminated-p nil)
     (or (funcall fn (ptr-of db) key key-len)
         (maybe-raise-error db (format nil "(key ~a)" key)))))
@@ -251,31 +286,6 @@ null-terminated."
        do (setf (aref value i) (mem-aref value-ptr :unsigned-char i))
        finally (return value))))
 
-
-;; (defclass qdbm-iterator ()
-;;   ((qdbm-handle :initarg :handle
-;;                 :reader handle-of)
-;;    (next-key-ptr :initarg :next-key
-;;                  :accessor next-key-of)))
-
-;; (defmethod qdbm-iterator ((handle qdbm-depot-handle))
-;;   (if (= 1 (dpiterinit (depot-of handle)))
-;;       (make-instance 'qdbm-iterator :handle handle)
-;;     (error 'qdbm-error :text (last-qdbm-error-msg))))
-
-;; (defmethod qdbm-iterator-next ((iterator qdbm-iterator))
-;;   )
-
-;; (defmethod qdbm-iterator-next ((handle qdbm-depot-handle))
-;;   (let ((key-size-ptr (foreign-alloc :int)))
-;;     (unwind-protect
-;;          (let ((key-ptr (dpiternext (depot-of handle) key-size-ptr)))
-;;            (cond ((null-pointer-p key-size-ptr)
-;;                   nil)
-;;                  ((null-pointer-p key-ptr)
-;;                   nil)
-;;                  (t
-;;                   (let ((key-size (mem-ref key-ptr :int))))))))))
                     
 ;; (defun your-wrapper-around-the-foreign-function (...)
 ;;   (let ((ptr (your-foreign-function ...)))

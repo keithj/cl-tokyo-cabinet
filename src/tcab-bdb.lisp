@@ -41,6 +41,7 @@
 
 (defmethod dbm-open ((db tcab-bdb) filespec &rest mode)
   (let ((db-ptr (ptr-of db)))
+    (validate-open-mode mode)
     (unless (tcbdbopen db-ptr filespec mode) ; opens db by side-effect
       (let* ((code (tcbdbecode db-ptr))
              (msg (tcbdberrmsg code)))
@@ -184,8 +185,14 @@
 (defmethod dbm-file-size ((db tcab-bdb))
   (tcbdbfsiz (ptr-of db)))
 
-(defmethod dbm-optimize ((db tcab-bdb) &rest args)
-  (apply #'tcbdboptimize (ptr-of db) args))
+(defmethod dbm-optimize ((db tcab-bdb) &key (leaf 0) (non-leaf 0)
+                         (bucket-size 0) (rec-align -1) (free-pool -1)
+                         (opts '(:defaults)))
+  (tcbdboptimize (ptr-of db) leaf non-leaf bucket-size rec-align
+                 free-pool opts))
+
+(defmethod dbm-cache ((db tcab-bdb) &key (leaf 1024) (non-leaf 512))
+  (tcbdbsetcache (ptr-of db) leaf non-leaf))
 
 (defun %bdb-put-fn (mode)
   (ecase mode

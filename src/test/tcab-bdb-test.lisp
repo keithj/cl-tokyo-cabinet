@@ -90,7 +90,33 @@
     (is-true (dbm-put db "key-one" "VALUE-THREE" :mode :concat))
     (is (string= "VALUE-TWOVALUE-THREE" (dbm-get db "key-one")))))
 
-(test dbm-put/bdb/int32/string ()
+(test dbm-put/bdb/string/octets
+  (with-fixture bdb-empty ()
+    (let ((octets (make-array 10 :element-type '(unsigned-byte 8)
+                              :initial-contents (loop
+                                                   for c across "abcdefghij"
+                                                   collect (char-code c)))))
+      (is-true (dbm-put db "key-one" octets))
+      (is (equalp octets (dbm-get db "key-one" :octets))))))
+
+(test dbm-put/bdb/int32/octets
+  (let ((db (make-instance 'tcab-bdb))
+        (bdb-filespec (namestring (iou:make-tmp-pathname
+                                   :basename "bdb" :type "db"
+                                   :tmpdir (merge-pathnames "data"))))
+        (octets (make-array 10 :element-type '(unsigned-byte 8)
+                              :initial-contents (loop
+                                                   for c across "abcdefghij"
+                                                   collect (char-code c)))))
+    (is-true (set-comparator db :int32))
+    (dbm-open db bdb-filespec :write :create)
+    ;; Add one
+    (is-true (dbm-put db 111 octets))
+    (is (equalp octets (dbm-get db 111 :octets)))
+    (dbm-close db)
+    (delete-file bdb-filespec)))
+
+(test dbm-put/bdb/int32/string
   (let ((db (make-instance 'tcab-bdb))
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"

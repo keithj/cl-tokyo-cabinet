@@ -43,33 +43,14 @@
    #:+tcekeep+
    #:+tcenorec+
    #:+tcemisc+
-   #:+bdboreader+
-   #:+bdbowriter+
-   #:+bdbocreat+
-   #:+bdbotrunc+
-   #:+bdbonolck+
-   #:+bdbolcknb+
-   #:+bdbtlarge+
-   #:+bdbtdeflate+
-   #:+bdbttcbs+
-   #:+hdbtlarge+
-   #:+hdbtdeflate+
-   #:+hdbttcbs+
    #:+bdbcpcurrent+
    #:+bdbcpbefore+
    #:+bdbcpafter+
-   #:+hdboreader+
-   #:+hdbowriter+
-   #:+hdbocreat+
-   #:+hdbotrunc+
-   #:+hdbonolck+
-   #:+hdbolcknb+
-   #:+hdbtlarge+
-   #:+hdbtdeflate+
-   #:+hdbttcbs+
 
    #:bdb-open-flags
    #:hdb-open-flags
+   #:bdb-options
+   #:hdb-options
    ;; Variables
 
    ;; Functions
@@ -170,6 +151,7 @@
 
 (defpackage #:cl-tcab
   (:use #:common-lisp :cffi :tcab-cffi :cl-gp-utilities)
+  (:nicknames #:tc)
   (:export
    ;; Constants
 

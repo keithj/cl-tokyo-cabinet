@@ -37,6 +37,7 @@
 
 (defmethod dbm-open ((db tcab-hdb) filename &rest mode)
   (let ((db-ptr (ptr-of db)))
+    (validate-open-mode mode)
     (unless (tchdbopen db-ptr filename mode) ; opens db by side-effect
       (let* ((code (tchdbecode db-ptr))
              (msg (tchdberrmsg code)))
@@ -96,8 +97,14 @@
 (defmethod dbm-file-size ((db tcab-hdb))
   (tchdbfsiz (ptr-of db)))
 
-(defmethod dbm-optimize ((db tcab-hdb) &rest args)
-  (apply #'tchdboptimize (ptr-of db) args))
+(defmethod dbm-optimize ((db tcab-hdb) &key (bucket-size 0)
+                         (rec-align -1) (free-pool -1)
+                         (options '(:defaults))
+                         &allow-other-keys)
+  (tchdboptimize (ptr-of db) bucket-size rec-align free-pool options))
+
+(defmethod dbm-cache ((db tcab-hdb) &key (records 0))
+  (tchdbsetcache (ptr-of db) records))
 
 (defun %hdb-put-fn (mode)
   (ecase mode
