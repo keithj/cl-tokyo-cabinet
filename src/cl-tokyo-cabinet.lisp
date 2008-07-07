@@ -77,12 +77,39 @@ cursor."))
   ()
   (:documentation "A hash database iterator."))
 
-(defgeneric dbm-open (name db-type &rest mode)
-  (:documentation ""))
+(defgeneric dbm-open (db filespec &rest mode)
+  (:documentation "Opens a new, or existing TC database.
 
-(defgeneric dbm-close (db))
+Arguments:
+- db (object): A TC dbm object.
+- filespec (string): A pathname designator for the database file.
 
-(defgeneric dbm-delete (db))
+Rest:
+- mode (list symbol): A list of mode keywords used when opening the
+file. The modes are :read :write :create :truncate :noblock :nolock
+which correspond to those described in the TC specification.
+
+Returns:
+The TC dbm object, now open."))
+
+(defgeneric dbm-close (db)
+  (:documentation "Closes an open TC database.
+
+Arguments:
+- db (object): A TC dbm object.
+
+Returns:
+T on success, or NIL otherwise."))
+
+(defgeneric dbm-delete (db)
+  (:documentation "Deletes a TC database. If open, implicitly closes
+it first.
+
+Arguments:
+- db (object): A TC dbm object.
+
+Returns: 
+NIL ."))
 
 (defgeneric dbm-vanish (db))
 

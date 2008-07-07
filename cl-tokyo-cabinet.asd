@@ -31,20 +31,21 @@
     :depends-on (:cffi :cl-gp-utilities)
     :components ((:module :cl-tokyo-cabinet
                           :pathname "src/"
-                          :components ((:file "package")
-                                       (:file "tcab-cffi"
-                                              :depends-on ("package"))
-                                       (:file "cl-tcab"
-                                              :depends-on ("package"
-                                                           "tcab-cffi"))
-                                       (:file "tcab-bdb"
-                                              :depends-on ("package"
-                                                           "tcab-cffi"
-                                                           "cl-tcab"))
-                                       (:file "tcab-hdb"
-                                              :depends-on ("package"
-                                                           "tcab-cffi"
-                                                           "cl-tcab"))))))
+                          :components
+                          ((:file "package")
+                           (:file "tokyo-cabinet-cffi"
+                                  :depends-on ("package"))
+                           (:file "cl-tokyo-cabinet"
+                                  :depends-on ("package"
+                                               "tokyo-cabinet-cffi"))
+                           (:file "tokyo-cabinet-bdb"
+                                  :depends-on ("package"
+                                               "tokyo-cabinet-cffi"
+                                               "cl-tokyo-cabinet"))
+                           (:file "tokyo-cabinet-hdb"
+                                  :depends-on ("package"
+                                               "tokyo-cabinet-cffi"
+                                               "cl-tokyo-cabinet"))))))
 
 (in-package #:asdf)
 
@@ -53,7 +54,7 @@
   (operate 'load-op :cl-tokyo-cabinet-test)
   (let ((*default-pathname-defaults* (component-pathname c)))
     (funcall (intern (string :run!) (string :fiveam))
-             'cl-tc-system:testsuite)))
+             'cl-tokyo-cabinet-system:testsuite)))
 
 (defmethod operation-done-p ((op test-op) (c (eql (find-system
                                                    :cl-tokyo-cabinet))))
