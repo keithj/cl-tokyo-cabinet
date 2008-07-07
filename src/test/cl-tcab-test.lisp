@@ -15,16 +15,16 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :cl-tcab-system)
+(in-package :cl-tokyo-cabinet-system)
 
 (fiveam:def-suite testsuite
     :description "The test suite.")
 
 
-(in-package :cl-tcab-test)
+(in-package :cl-tokyo-cabinet-test)
 
 (def-fixture bdb-empty ()
-  (let ((db (make-instance 'tcab-bdb))
+  (let ((db (make-instance 'tc-bdb))
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
@@ -34,7 +34,7 @@
     (delete-file bdb-filespec)))
 
 (def-fixture bdb-100 ()
-  (let ((db (make-instance 'tcab-bdb))
+  (let ((db (make-instance 'tc-bdb))
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
@@ -47,7 +47,7 @@
     (delete-file bdb-filespec)))
 
 (def-fixture hdb-empty ()
-  (let ((db (make-instance 'tcab-hdb))
+  (let ((db (make-instance 'tc-hdb))
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "hdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
@@ -57,7 +57,7 @@
     (delete-file bdb-filespec)))
 
 (def-fixture hdb-100 ()
-  (let ((db (make-instance 'tcab-hdb))
+  (let ((db (make-instance 'tc-hdb))
         (hdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "hdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))

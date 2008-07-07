@@ -15,17 +15,17 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :cl-tcab-test)
+(in-package :cl-tokyo-cabinet-test)
 
-(in-suite cl-tcab-system:testsuite)
+(in-suite cl-tokyo-cabinet-system:testsuite)
 
 (test new-hdb
-  (let ((db (make-instance 'tcab-hdb)))
-    (is-true (cffi:pointerp (cl-tcab::ptr-of db)))
+  (let ((db (make-instance 'tc-hdb)))
+    (is-true (cffi:pointerp (tc::ptr-of db)))
     (dbm-delete db)))
 
 (test dbm-open/hdb
-  (let ((db (make-instance 'tcab-hdb))
+  (let ((db (make-instance 'tc-hdb))
         (hdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "hdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))

@@ -15,7 +15,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :tcab-cffi)
+(in-package :tc-cffi)
 
 (defconstant +tcesuccess+ 0)
 (defconstant +tcethread+ 1)

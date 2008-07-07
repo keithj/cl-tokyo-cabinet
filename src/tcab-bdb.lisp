@@ -15,22 +15,22 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :cl-tcab)
+(in-package :cl-tokyo-cabinet)
 
-(defmethod initialize-instance :after ((db tcab-bdb) &key)
+(defmethod initialize-instance :after ((db tc-bdb) &key)
   (with-slots (ptr) db
     (setf ptr (tcbdbnew))))
 
-(defmethod set-comparator ((db tcab-bdb) (comparator symbol))
+(defmethod set-comparator ((db tc-bdb) (comparator symbol))
   (tcbdbsetcmpfunc (ptr-of db) (or (%builtin-comparator comparator)
                                    comparator) (null-pointer)))
 
-(defmethod raise-error ((db tcab-bdb) &optional text)
+(defmethod raise-error ((db tc-bdb) &optional text)
   (let* ((code (tcbdbecode (ptr-of db)))
          (msg (tcbdberrmsg code)))
     (error 'dbm-error :error-code code :error-msg msg :text text)))
 
-(defmethod maybe-raise-error ((db tcab-bdb) &optional text)
+(defmethod maybe-raise-error ((db tc-bdb) &optional text)
   (let ((ecode (tcbdbecode (ptr-of db))))
     (cond ((= +tcesuccess+ ecode)
            t)
@@ -39,7 +39,7 @@
           (t
            (raise-error db text)))))
 
-(defmethod dbm-open ((db tcab-bdb) filespec &rest mode)
+(defmethod dbm-open ((db tc-bdb) filespec &rest mode)
   (let ((db-ptr (ptr-of db)))
     (validate-open-mode mode)
     (unless (tcbdbopen db-ptr filespec mode) ; opens db by side-effect
@@ -49,64 +49,64 @@
         (error 'dbm-error :error-code code :error-msg msg))))
   db)
 
-(defmethod dbm-close ((db tcab-bdb))
+(defmethod dbm-close ((db tc-bdb))
   (tcbdbclose (ptr-of db)))
 
-(defmethod dbm-delete ((db tcab-bdb))
+(defmethod dbm-delete ((db tc-bdb))
   (tcbdbdel (ptr-of db)))
 
-(defmethod dbm-vanish ((db tcab-bdb))
+(defmethod dbm-vanish ((db tc-bdb))
   (tcbdbvanish (ptr-of db)))
 
-(defmethod dbm-begin ((db tcab-bdb))
+(defmethod dbm-begin ((db tc-bdb))
   (unless (tcbdbtranbegin (ptr-of db))
     (raise-error db)))
 
-(defmethod dbm-commit ((db tcab-bdb))
+(defmethod dbm-commit ((db tc-bdb))
   (unless (tcbdbtrancommit (ptr-of db))
     (raise-error db)))
 
-(defmethod dbm-abort ((db tcab-bdb))
+(defmethod dbm-abort ((db tc-bdb))
   (unless (tcbdbtranabort (ptr-of db))
     (raise-error db)))
 
-(defmethod dbm-get ((db tcab-bdb) (key string) &optional (type :string))
+(defmethod dbm-get ((db tc-bdb) (key string) &optional (type :string))
   (ecase type
     (:string (get-string->string db key #'tcbdbget2))
     (:octets (get-string->octets db key #'tcbdbget))))
 
-(defmethod dbm-get ((db tcab-bdb) (key integer) &optional (type :string))
+(defmethod dbm-get ((db tc-bdb) (key integer) &optional (type :string))
   (ecase type
     (:string (get-int32->string db key #'tcbdbget))
     (:octets (get-int32->octets db key #'tcbdbget))))
 
-(defmethod dbm-put ((db tcab-bdb) (key string) (value string) 
+(defmethod dbm-put ((db tc-bdb) (key string) (value string) 
                     &key (mode :replace))
   (put-string->string db key value (%bdb-str-put-fn mode)))
 
-(defmethod dbm-put ((db tcab-bdb) (key string) (value vector) 
+(defmethod dbm-put ((db tc-bdb) (key string) (value vector) 
                     &key (mode :replace))
   (put-string->octets db key value (%bdb-put-fn mode)))
 
-(defmethod dbm-put ((db tcab-bdb) (key integer) (value string)
+(defmethod dbm-put ((db tc-bdb) (key integer) (value string)
                     &key (mode :replace))
   (put-int32->string db key value (%bdb-put-fn mode)))
 
-(defmethod dbm-put ((db tcab-bdb) (key integer) (value vector)
+(defmethod dbm-put ((db tc-bdb) (key integer) (value vector)
                     &key (mode :replace))
   (put-int32->octets db key value (%bdb-put-fn mode)))
 
-(defmethod dbm-rem ((db tcab-bdb) (key string) &key remove-dups)
+(defmethod dbm-rem ((db tc-bdb) (key string) &key remove-dups)
   (if remove-dups
       (rem-string->duplicates db key #'tcbdbout3)
     (rem-string->value db key #'tcbdbout2)))
 
-(defmethod dbm-rem ((db tcab-bdb) (key integer) &key remove-dups)
+(defmethod dbm-rem ((db tc-bdb) (key integer) &key remove-dups)
   (if remove-dups
       (rem-int32->value db key #'tcbdbout3)
     (rem-int32->value db key #'tcbdbout)))
 
-(defmethod iter-open ((db tcab-bdb))
+(defmethod iter-open ((db tc-bdb))
   (make-instance 'bdb-iterator :ptr (tcbdbcurnew (ptr-of db))))
 
 (defmethod iter-close ((iter bdb-iterator))
@@ -176,22 +176,22 @@
         (foreign-free key-ptr)))))
 
 
-(defmethod dbm-num-records ((db tcab-bdb))
+(defmethod dbm-num-records ((db tc-bdb))
   (tcbdbrnum (ptr-of db)))
 
-(defmethod dbm-file-namestring ((db tcab-bdb))
+(defmethod dbm-file-namestring ((db tc-bdb))
   (tcbdbpath (ptr-of db)))
 
-(defmethod dbm-file-size ((db tcab-bdb))
+(defmethod dbm-file-size ((db tc-bdb))
   (tcbdbfsiz (ptr-of db)))
 
-(defmethod dbm-optimize ((db tcab-bdb) &key (leaf 0) (non-leaf 0)
+(defmethod dbm-optimize ((db tc-bdb) &key (leaf 0) (non-leaf 0)
                          (bucket-size 0) (rec-align -1) (free-pool -1)
                          (opts '(:defaults)))
   (tcbdboptimize (ptr-of db) leaf non-leaf bucket-size rec-align
                  free-pool opts))
 
-(defmethod dbm-cache ((db tcab-bdb) &key (leaf 1024) (non-leaf 512))
+(defmethod dbm-cache ((db tc-bdb) &key (leaf 1024) (non-leaf 512))
   (tcbdbsetcache (ptr-of db) leaf non-leaf))
 
 (defun %bdb-put-fn (mode)

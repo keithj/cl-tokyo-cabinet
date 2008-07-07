@@ -15,7 +15,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :cl-tcab)
+(in-package :cl-tokyo-cabinet)
 
 ;; (declaim (optimize (debug 3) (safety 3)))
 
@@ -27,10 +27,10 @@
   "The 64bit built-in DBM key type."
   '(signed-byte 64))
 
-(cffi:define-foreign-library libtcab
+(cffi:define-foreign-library libtc
   (t (:default "libtokyocabinet")))
 
-(cffi:use-foreign-library libtcab)
+(cffi:use-foreign-library libtc)
 
 (define-condition dbm-error (error)
   ((error-code :initform nil
@@ -48,27 +48,37 @@
                      (error-msg-of condition)
                      (text condition)))))
 
-(defclass tcab-dbm ()
+(defclass tc-dbm ()
   ((ptr :initarg :ptr
-        :accessor ptr-of)))
+        :accessor ptr-of
+        :documentation "A pointer to a TC native database object."))
+  (:documentation "A TC database."))
 
-(defclass tcab-bdb (tcab-dbm)
-  ())
+(defclass tc-bdb (tc-dbm)
+  ()
+  (:documentation "A TC B+ tree database."))
 
-(defclass tcab-hdb (tcab-dbm)
-  ())
+(defclass tc-hdb (tc-dbm)
+  ()
+  (:documentation "A TC hash database."))
 
-(defclass tcab-iterator ()
+(defclass tc-iterator ()
   ((ptr :initarg :ptr
-        :accessor ptr-of)))
+        :accessor ptr-of
+        :documentation "A pointer to a native TC iterator or
+cursor."))
+  (:documentation "A TC database iterator."))
 
-(defclass bdb-iterator (tcab-iterator)
-  ())
+(defclass bdb-iterator (tc-iterator)
+  ()
+  (:documentation "A B+ tree database cursor."))
 
-(defclass hdb-iterator (tcab-iterator)
-  ())
+(defclass hdb-iterator (tc-iterator)
+  ()
+  (:documentation "A hash database iterator."))
 
-(defgeneric dbm-open (name db-type &rest mode))
+(defgeneric dbm-open (name db-type &rest mode)
+  (:documentation ""))
 
 (defgeneric dbm-close (db))
 
@@ -194,19 +204,6 @@ null-terminated."
       (when (and value-ptr (not (null-pointer-p value-ptr)))
         (foreign-string-free value-ptr)))))
 
-(defun get-string-int32 (db key fn)
-  (let ((value-ptr nil))
-    (unwind-protect
-         (with-foreign-string ((key-ptr key-len) key
-                               :null-terminated-p nil)
-           (with-foreign-object (size-ptr :int)
-             (setf value-ptr (funcall fn (ptr-of db) key-ptr key-len size-ptr))
-             (if (null-pointer-p value-ptr)
-                 (maybe-raise-error db (format nil "(key ~a)" key))
-               (mem-ref value-ptr :int))))
-      (when (and value-ptr (not (null-pointer-p value-ptr)))
-        (foreign-free value-ptr)))))
-
 (defun put-string->string (db key value fn)
   (or (funcall fn (ptr-of db) key value)
       (maybe-raise-error db (format nil "(key ~a) (value ~a)" key value))))
@@ -250,17 +247,6 @@ null-terminated."
       (or (funcall fn (ptr-of db) key-ptr key-len value-ptr value-len)
         (maybe-raise-error db (format nil "(key ~a) (value ~a)"
                                       key value))))))
-
-(defun put-string->int32 (db key value fn)
-  (declare (type int32 value))
-  (let ((key-len (length key))
-        (value-len (foreign-type-size :int32)))
-    (with-foreign-string (key-ptr key)
-      (with-foreign-object (value-ptr :int32)
-        (setf (mem-ref value-ptr :int32) value)
-        (or (funcall fn (ptr-of db) key-ptr key-len value-ptr value-len)
-            (maybe-raise-error db (format nil "(key ~a) (value ~a)"
-                                          key value)))))))
 
 (defun rem-string->value (db key fn)
   (or (funcall fn (ptr-of db) key)

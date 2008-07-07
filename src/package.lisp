@@ -15,7 +15,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(defpackage #:tcab-cffi
+(defpackage #:tc-cffi
   (:use #:common-lisp :cffi)
   (:export
    ;; Constants
@@ -149,8 +149,8 @@
    #:tchdbrnum
    #:tchdbfsiz))
 
-(defpackage #:cl-tcab
-  (:use #:common-lisp :cffi :tcab-cffi :cl-gp-utilities)
+(defpackage #:cl-tokyo-cabinet
+  (:use #:common-lisp :cffi :tc-cffi :cl-gp-utilities)
   (:nicknames #:tc)
   (:export
    ;; Constants
@@ -158,8 +158,8 @@
    ;; Variables
 
    ;; Classes
-   #:tcab-bdb
-   #:tcab-hdb
+   #:tc-bdb
+   #:tc-hdb
 
    ;; Conditions
    #:dbm-error

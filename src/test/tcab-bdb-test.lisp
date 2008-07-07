@@ -15,17 +15,17 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :cl-tcab-test)
+(in-package :cl-tokyo-cabinet-test)
 
-(in-suite cl-tcab-system:testsuite)
+(in-suite cl-tokyo-cabinet-system:testsuite)
 
 (test new-bdb
-  (let ((db (make-instance 'tcab-bdb)))
-    (is-true (cffi:pointerp (cl-tcab::ptr-of db)))
+  (let ((db (make-instance 'tc-bdb)))
+    (is-true (cffi:pointerp (tc::ptr-of db)))
     (dbm-delete db)))
 
 (test dbm-open/bdb
-  (let ((db (make-instance 'tcab-bdb))
+  (let ((db (make-instance 'tc-bdb))
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
@@ -100,7 +100,7 @@
       (is (equalp octets (dbm-get db "key-one" :octets))))))
 
 (test dbm-put/bdb/int32/octets
-  (let ((db (make-instance 'tcab-bdb))
+  (let ((db (make-instance 'tc-bdb))
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data"))))
@@ -117,7 +117,7 @@
     (delete-file bdb-filespec)))
 
 (test dbm-put/bdb/int32/string
-  (let ((db (make-instance 'tcab-bdb))
+  (let ((db (make-instance 'tc-bdb))
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
@@ -139,7 +139,7 @@
     (delete-file bdb-filespec)))
 
 (test dbm-get/bdb/int32/string
-  (let ((db (make-instance 'tcab-bdb))
+  (let ((db (make-instance 'tc-bdb))
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
@@ -156,7 +156,7 @@
     (delete-file bdb-filespec)))
 
 (test dbm-iter/bdb/int32/string
-  (let ((db (make-instance 'tcab-bdb))
+  (let ((db (make-instance 'tc-bdb))
         (bdb-filespec (namestring (iou:make-tmp-pathname
                                    :basename "bdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))

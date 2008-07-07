@@ -17,19 +17,19 @@
 
 (in-package :cl-user)
 
-(defpackage #:cl-tcab-system
+(defpackage #:cl-tokyo-cabinet-system
   (:use :common-lisp :asdf)
   (:export #:testsuite))
 
-(in-package #:cl-tcab-system)
+(in-package #:cl-tokyo-cabinet-system)
 
-(defsystem cl-tcab
+(defsystem cl-tokyo-cabinet
     :name "Common Lisp Tokyo Cabinet"
     :author "Keith James"
     :version "0.1.0"
     :licence "GPL"
     :depends-on (:cffi :cl-gp-utilities)
-    :components ((:module :cl-tcab
+    :components ((:module :cl-tokyo-cabinet
                           :pathname "src/"
                           :components ((:file "package")
                                        (:file "tcab-cffi"
@@ -49,20 +49,20 @@
 (in-package #:asdf)
 
 (defmethod perform ((op test-op) (c (eql (find-system
-                                          :cl-tcab))))
-  (operate 'load-op :cl-tcab-test)
+                                          :cl-tokyo-cabinet))))
+  (operate 'load-op :cl-tokyo-cabinet-test)
   (let ((*default-pathname-defaults* (component-pathname c)))
     (funcall (intern (string :run!) (string :fiveam))
-             'cl-tcab-system:testsuite)))
+             'cl-tc-system:testsuite)))
 
 (defmethod operation-done-p ((op test-op) (c (eql (find-system
-                                                   :cl-tcab))))
+                                                   :cl-tokyo-cabinet))))
   nil)
 
 (defmethod perform ((op cldoc-op) (c (eql (find-system
-                                           :cl-tcab))))
-  (unless (find-package :cl-tcab)
-    (operate 'load-op :cl-tcab))
+                                           :cl-tokyo-cabinet))))
+  (unless (find-package :cl-tokyo-cabinet)
+    (operate 'load-op :cl-tokyo-cabinet))
   (let ((*default-pathname-defaults* (component-pathname c))
         (fn-sym (intern (string :extract-documentation) (string :cldoc)))
         (op-sym (intern (string :html) (string :cldoc))))

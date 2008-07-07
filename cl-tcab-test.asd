@@ -1,12 +1,12 @@
 
-(in-package #:cl-tcab-system)
+(in-package #:cl-tc-system)
 
-(defsystem cl-tcab-test
-    :depends-on (:cl-tcab :fiveam :cl-io-utilities)
-    :components ((:module :cl-tcab-test
+(defsystem cl-tc-test
+    :depends-on (:cl-tokyo-cabinet :fiveam :cl-io-utilities)
+    :components ((:module :cl-tc-test
                           :serial t
                           :pathname "src/test/"
                           :components ((:file "package")
-                                       (:file "cl-tcab-test")
-                                       (:file "tcab-hdb-test")
-                                       (:file "tcab-bdb-test")))))
+                                       (:file "cl-tc-test")
+                                       (:file "tc-hdb-test")
+                                       (:file "tc-bdb-test")))))

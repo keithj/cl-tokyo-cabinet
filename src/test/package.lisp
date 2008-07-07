@@ -15,6 +15,6 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(defpackage #:cl-tcab-test
-  (:use #:common-lisp #:cl-tcab #:fiveam)
-  (:documentation "cl-tcab tests."))
+(defpackage #:cl-tokyo-cabinet-test
+  (:use #:common-lisp #:cl-tokyo-cabinet #:fiveam)
+  (:documentation "cl-tokyo-cabinet tests."))
