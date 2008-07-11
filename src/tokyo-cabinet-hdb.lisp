@@ -88,6 +88,31 @@
   (declare (ignore remove-dups))
   (rem-int32->value db key #'tchdbout))
 
+(defmethod iter-open ((db tc-hdb))
+  (if (tchdbiterinit (ptr-of db))
+      (make-instance 'hdb-iterator :ptr (ptr-of db))
+    (raise-error db)))
+
+(defmethod iter-close ((iter hdb-iterator))
+  t)
+
+(defmethod iter-next ((iter hdb-iterator))
+  (with-foreign-object (size-ptr :int)
+    (let ((key-ptr (tchdbiternext (ptr-of iter) size-ptr)))
+      (setf (next-key-of iter) key-ptr
+            (key-size-of iter) size-ptr)
+      (null-pointer-p key-ptr))))
+
+(defmethod iter-key ((iter hdb-iterator) &optional (type :string))
+  (let ((key-ptr (next-key-of iter))
+        (size-ptr (key-size-of iter)))
+    (unless (null-pointer-p key-ptr)
+      (ecase type
+        (:string (foreign-string-to-lisp key-ptr :count
+                                         (mem-ref size-ptr :int)))
+        (:integer (mem-ref key-ptr :int32))
+        (:octets (copy-foreign-value key-ptr size-ptr))))))
+
 (defmethod dbm-num-records ((db tc-hdb))
   (tchdbrnum (ptr-of db)))
 

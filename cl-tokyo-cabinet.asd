@@ -28,7 +28,7 @@
     :author "Keith James"
     :version "0.1.0"
     :licence "GPL"
-    :depends-on (:cffi :cl-gp-utilities)
+    :depends-on (:cffi)
     :components ((:module :cl-tokyo-cabinet
                           :pathname "src/"
                           :components

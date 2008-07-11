@@ -15,7 +15,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :tc-cffi)
+(in-package :tokyo-cabinet-cffi)
 
 (defconstant +tcesuccess+ 0)
 (defconstant +tcethread+ 1)

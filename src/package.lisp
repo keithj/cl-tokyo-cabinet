@@ -15,7 +15,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(defpackage #:tc-cffi
+(defpackage #:tokyo-cabinet-cffi
   (:use #:common-lisp :cffi)
   (:export
    ;; Constants
@@ -150,7 +150,7 @@
    #:tchdbfsiz))
 
 (defpackage #:cl-tokyo-cabinet
-  (:use #:common-lisp :cffi :tc-cffi :cl-gp-utilities)
+  (:use #:common-lisp :cffi :tokyo-cabinet-cffi)
   (:nicknames #:tc)
   (:export
    ;; Constants
@@ -167,6 +167,8 @@
    ;; Generics
    #:dbm-open
    #:dbm-close
+   #:dbm-begin
+   #:dbm-commit
    #:dbm-delete
    #:dbm-vanish
    #:dbm-put
@@ -191,4 +193,9 @@
    #:set-comparator
    
    ;; Functions
+
+   ;; Macros
+   #:with-database
+   #:with-transaction
+   #:with-iterator
    ))

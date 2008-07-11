@@ -177,3 +177,43 @@
       (iter-close iter))
     (dbm-close db)
     (delete-file bdb-filespec)))
+
+(test with-database/bdb
+  (let ((bdb-filespec (namestring (iou:make-tmp-pathname
+                                   :basename "bdb" :type "db"
+                                   :tmpdir (merge-pathnames "data")))))
+    (with-database (db bdb-filespec 'tc-bdb :write :create)
+       (is-true (dbm-put db "key-one" "value-one"))
+        (is (string= "value-one" (dbm-get db "key-one"))))
+    (is-true (fad:file-exists-p bdb-filespec))
+    (delete-file bdb-filespec)))
+
+(test with-transaction/bdb
+  (let ((bdb-filespec (namestring (iou:make-tmp-pathname
+                                   :basename "bdb" :type "db"
+                                   :tmpdir (merge-pathnames "data")))))
+    (with-database (db bdb-filespec 'tc-bdb :write :create)
+      (signals error
+        (with-transaction (db)
+          (is-true (dbm-put db "key-one" "value-one"))
+          (error "Test error.")))
+      (is (null (dbm-get db "key-one")))))) ; should rollback
+
+(test with-iterator/bdb
+  (let ((bdb-filespec (namestring (iou:make-tmp-pathname
+                                   :basename "bdb" :type "db"
+                                   :tmpdir (merge-pathnames "data")))))
+    (with-database (db bdb-filespec 'tc-bdb :write :create)
+      (let ((data (loop
+                     for i from 0 below 10
+                     collect (cons (format nil "key-~a" i)
+                                   (format nil "value-~a" i)))))
+        (loop for (key . value) in data
+           do (dbm-put db key value))
+        (with-iterator (iter db)
+          (iter-first iter)
+          (loop
+             for (key . value) in (butlast data)
+             do (progn (is (string= key (iter-key iter)))
+                       (is-true (iter-next iter)))
+             finally (is-false (iter-next iter))))))))

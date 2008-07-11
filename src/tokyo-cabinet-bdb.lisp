@@ -175,7 +175,6 @@
       (when (and key-ptr (not (null-pointer-p key-ptr)))
         (foreign-free key-ptr)))))
 
-
 (defmethod dbm-num-records ((db tc-bdb))
   (tcbdbrnum (ptr-of db)))
 

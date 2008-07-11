@@ -32,6 +32,8 @@
 
 (cffi:use-foreign-library libtc)
 
+(defparameter *in-transaction-p* nil)
+
 (define-condition dbm-error (error)
   ((error-code :initform nil
                :initarg :error-code
@@ -65,8 +67,7 @@
 (defclass tc-iterator ()
   ((ptr :initarg :ptr
         :accessor ptr-of
-        :documentation "A pointer to a native TC iterator or
-cursor."))
+        :documentation "A TC pointer."))
   (:documentation "A TC database iterator."))
 
 (defclass bdb-iterator (tc-iterator)
@@ -74,7 +75,8 @@ cursor."))
   (:documentation "A B+ tree database cursor."))
 
 (defclass hdb-iterator (tc-iterator)
-  ()
+  ((next-key :accessor next-key-of)
+   (key-size :accessor key-size-of))
   (:documentation "A hash database iterator."))
 
 (defgeneric dbm-open (db filespec &rest mode)
@@ -86,7 +88,7 @@ Arguments:
 
 Rest:
 - mode (list symbol): A list of mode keywords used when opening the
-file. The modes are :read :write :create :truncate :noblock :nolock
+file. The modes are :READ :WRITE :CREATE :TRUNCATE :NOBLOCK :NOLOCK
 which correspond to those described in the TC specification.
 
 Returns:
@@ -162,6 +164,42 @@ NIL ."))
 (defgeneric raise-error (db &optional text))
 
 (defgeneric maybe-raise-error (db &optional text))
+
+(defmacro with-database ((var filespec type &rest mode) &body body)
+  `(let ((,var (make-instance ,type)))
+     (unwind-protect
+          (progn
+            (dbm-open ,var ,filespec ,@mode)
+            ,@body)
+       (when ,var
+         (dbm-close ,var)))))
+
+(defmacro with-transaction ((db) &body body)
+  (let ((success (gensym)))
+    `(let ((,success nil))
+       (flet ((atomic-op ()
+                ,@body))
+         (cond (*in-transaction-p*
+                (atomic-op))
+               (t
+                (unwind-protect
+                     (let ((*in-transaction-p* t))
+                       (prog2
+                           (dbm-begin ,db)
+                           (atomic-op)
+                         (setf ,success t)))
+                  (cond (,success
+                         (dbm-commit ,db))
+                        (t
+                         (dbm-abort ,db))))))))))
+
+(defmacro with-iterator ((var db) &body body)
+  `(let ((,var (iter-open ,db)))
+     (unwind-protect
+          (progn
+            ,@body)
+       (when ,var
+         (iter-close ,var)))))
 
 (defun validate-open-mode (mode)
   (cond ((and (member :create mode)
