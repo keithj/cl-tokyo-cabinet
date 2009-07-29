@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2008 Keith James. All rights reserved.
+;;; Copyright (C) 2008-2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -17,101 +17,95 @@
 
 (in-package :cl-tokyo-cabinet-test)
 
-(in-suite cl-tokyo-cabinet-system:testsuite)
-
-(test new-hdb
+(addtest (hdb-tests) new-hdb/1
   (let ((db (make-instance 'tc-hdb)))
-    (is-true (cffi:pointerp (tc::ptr-of db)))
+    (ensure (cffi:pointerp (tc::ptr-of db)))
     (dbm-delete db)))
 
-(test dbm-open/hdb
+(addtest (hdb-tests) dbm-open/hdb/1
   (let ((db (make-instance 'tc-hdb))
-        (hdb-filespec (namestring (iou:make-tmp-pathname
+        (hdb-filespec (namestring (dxi:make-tmp-pathname
                                    :basename "hdb" :type "db"
                                    :tmpdir (merge-pathnames "data")))))
     ;; Can't create a new DB in read-only mode
-    (signals dbm-error
+    (ensure-condition dbm-error
       (dbm-open db hdb-filespec :read :create))
-    (dbm-open db hdb-filespec :write :create)
-    (is-true (fad:file-exists-p hdb-filespec))
-    (is-true (delete-file hdb-filespec))))
+    (ensure (dbm-open db hdb-filespec :write :create))
+    (ensure (fad:file-exists-p hdb-filespec))
+    (ensure (delete-file hdb-filespec))))
 
-(test hbm-vanish/hdb
-  (with-fixture hdb-100 ()
-    (dbm-vanish db)
-    (is (zerop (dbm-num-records db)))))
+(addtest (hdb-100-tests) hbm-vanish/hdb/1
+  (dbm-vanish db)
+  (ensure (zerop (dbm-num-records db))))
 
-(test dbm-num-records/hdb
-  (with-fixture hdb-100 ()
-    (is (= 100 (dbm-num-records db)))
-    (dbm-vanish db)
-    (is (zerop (dbm-num-records db)))))
+(addtest (hdb-100-tests) dbm-num-records/hdb/1
+  (ensure (= 100 (dbm-num-records db)))
+  (dbm-vanish db)
+  (ensure (zerop (dbm-num-records db))))
 
-(test dbm-file-size/hdb
-  (with-fixture hdb-100 ()
-    (with-open-file (stream hdb-filespec :direction :input)
-        (= (dbm-file-size db)
-           (file-length stream)))))
+;; This fails. I think it's a tc bug. I reported this, or similar, in
+;; 2008, but the record of it seems to have been deleted from the tc
+;; site.
+(addtest (hdb-100-tests) dbm-file-size/hdb/1
+  (with-open-file (stream hdb-filespec :direction :input)
+    (ensure (= (dbm-file-size db)
+               (file-length stream))
+            :report "expected file size ~a but found ~a"
+            :arguments ((dbm-file-size db) (file-length stream)))))
 
-(test dbm-put/get/hdb/string/string
-  (with-fixture hdb-100 ()
-    (is-true (loop
-                for i from 0 below 100
-                for key = (format nil "key-~a" i)
-                for value = (format nil "value-~a" i)
-                always (string= (dbm-get db key) value)))))
+(addtest (hdb-100-tests) dbm-put/get/hdb/string/string/1
+ (ensure (loop
+            for i from 0 below 100
+            for key = (format nil "key-~a" i)
+            for value = (format nil "value-~a" i)
+            always (string= (dbm-get db key) value))))
 
-(test dbm-get/hdb/string/octets
-  (with-fixture hdb-100 ()
-    (is-true (loop
-                for i from 0 below 100
-                for key = (format nil "key-~a" i)
-                for value = (format nil "value-~a" i)
-                always (string= (gpu:make-sb-string
-                                 (dbm-get db key :octets)) value)))))
+(addtest (hdb-100-tests) dbm-get/hdb/string/octets/1
+  (ensure (loop
+             for i from 0 below 100
+             for key = (format nil "key-~a" i)
+             for value = (format nil "value-~a" i)
+             always (string= (dxu:make-sb-string
+                              (dbm-get db key :octets)) value))))
 
-(test dbm-get/hdb/string/bad-type
-  (with-fixture hdb-100 ()
-    (signals error
-      (dbm-get db "key-0" :bad-type))))
+(addtest (hdb-100-tests) dbm-get/hdb/string/bad-type/1
+ (ensure-error
+   (dbm-get db "key-0" :bad-type)))
 
-(test dbm-put/hdb/string/string
-  (with-fixture hdb-empty ()
-    ;; Add one
-    (is-true (dbm-put db "key-one" "value-one"))
-    (is (string= "value-one" (dbm-get db "key-one")))
-    ;; Keep
-    (signals dbm-error
-        (dbm-put db "key-one" "VALUE-TWO" :mode :keep))
-    (is (string= "value-one" (dbm-get db "key-one")))
-    ;; Replace
-    (is-true (dbm-put db "key-one" "VALUE-TWO" :mode :replace))
-    (is (string= "VALUE-TWO" (dbm-get db "key-one")))
-    ;; Concat
-    (is-true (dbm-put db "key-one" "VALUE-THREE" :mode :concat))
-    (is (string= "VALUE-TWOVALUE-THREE" (dbm-get db "key-one")))))
+(addtest (hdb-empty-tests) dbm-put/hdb/string/string/1
+  ;; Add one
+  (ensure (dbm-put db "key-one" "value-one"))
+  (ensure (string= "value-one" (dbm-get db "key-one")))
+  ;; Keep
+  (ensure-condition dbm-error
+    (dbm-put db "key-one" "VALUE-TWO" :mode :keep))
+  (ensure (string= "value-one" (dbm-get db "key-one")))
+  ;; Replace
+  (ensure (dbm-put db "key-one" "VALUE-TWO" :mode :replace))
+  (ensure (string= "VALUE-TWO" (dbm-get db "key-one")))
+  ;; Concat
+  (ensure (dbm-put db "key-one" "VALUE-THREE" :mode :concat))
+  (ensure (string= "VALUE-TWOVALUE-THREE" (dbm-get db "key-one"))))
 
-(test dbm-put/hdb/int32/string ()
- (with-fixture hdb-empty ()
-    ;; Add one
-    (is-true (dbm-put db 111 "value-one"))
-    (is (string= "value-one" (dbm-get db 111)))
-    ;; Keep
-    (signals dbm-error
-        (dbm-put db 111 "VALUE-TWO" :mode :keep))
-    ;; Replace
-    (is-true (dbm-put db 111 "VALUE-TWO" :mode :replace))
-    (is (string= "VALUE-TWO" (dbm-get db 111)))
-    ;; Concat
-    (is-true (dbm-put db 111 "VALUE-THREE" :mode :concat))
-    (is (string= "VALUE-TWOVALUE-THREE" (dbm-get db 111)))))
+(addtest (hdb-empty-tests) dbm-put/hdb/int32/string/1
+  ;; Add one
+  (ensure (dbm-put db 111 "value-one"))
+  (ensure (string= "value-one" (dbm-get db 111)))
+  ;; Keep
+  (ensure-condition dbm-error
+    (dbm-put db 111 "VALUE-TWO" :mode :keep))
+  ;; Replace
+  (ensure (dbm-put db 111 "VALUE-TWO" :mode :replace))
+  (ensure (string= "VALUE-TWO" (dbm-get db 111)))
+  ;; Concat
+  (ensure (dbm-put db 111 "VALUE-THREE" :mode :concat))
+  (ensure (string= "VALUE-TWOVALUE-THREE" (dbm-get db 111))))
 
-(test dbm-get/hdb/int32/string
- (with-fixture hdb-empty ()
-    (loop
-       for i from 0 below 100
-       do (dbm-put db i (format nil "value-~a" i)))
-    (is-true (loop
-                for i from 0 below 100
-                for value = (format nil "value-~a" i)
-                always (string= (dbm-get db i) value)))))
+(addtest (hdb-empty-tests) dbm-get/hdb/int32/string/1
+  (loop
+     for i from 0 below 100
+     do (dbm-put db i (format nil "value-~a" i)))
+  (ensure (loop
+             for i from 0 below 100
+             for value = (format nil "value-~a" i)
+             always (string= (dbm-get db i) value))))

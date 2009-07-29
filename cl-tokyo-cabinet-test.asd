@@ -1,5 +1,7 @@
 ;;;
-;;; Copyright (C) 2008 Keith James. All rights reserved.
+;;; Copyright (C) 2008-2009 Keith James. All rights reserved.
+;;;
+;;; This file is part of cl-tokyo-cabinet.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,14 +17,14 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package #:cl-tokyo-cabinet-system)
+(in-package :cl-tokyo-cabinet-system)
 
 (defsystem cl-tokyo-cabinet-test
-    :depends-on (:cl-tokyo-cabinet :fiveam :cl-io-utilities)
+    :depends-on (:cl-tokyo-cabinet :lift :deoxybyte-io)
     :components ((:module :cl-tokyo-cabinet-test
                           :serial t
                           :pathname "src/test/"
                           :components ((:file "package")
                                        (:file "cl-tokyo-cabinet-test")
-                                       (:file "tokyo-cabinet-hdb-test")
-                                       (:file "tokyo-cabinet-bdb-test")))))
+                                       (:file "tokyo-cabinet-bdb-test")
+                                       (:file "tokyo-cabinet-hdb-test")))))

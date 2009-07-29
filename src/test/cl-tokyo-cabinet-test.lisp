@@ -1,5 +1,7 @@
 ;;;
-;;; Copyright (C) 2008 Keith James. All rights reserved.
+;;; Copyright (C) 2008-2009 Keith James. All rights reserved.
+;;;
+;;; This file is part of cl-tokyo-cabinet.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,56 +17,55 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :cl-tokyo-cabinet-system)
-
-(fiveam:def-suite testsuite
-    :description "The test suite.")
-
-
 (in-package :cl-tokyo-cabinet-test)
 
-(def-fixture bdb-empty ()
-  (let ((db (make-instance 'tc-bdb))
-        (bdb-filespec (namestring (iou:make-tmp-pathname
-                                   :basename "bdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
-    (dbm-open db bdb-filespec :write :create)
-    (&body)
-    (dbm-close db)
-    (delete-file bdb-filespec)))
+(deftestsuite cl-tokyo-cabinet-tests ()
+  ())
 
-(def-fixture bdb-100 ()
-  (let ((db (make-instance 'tc-bdb))
-        (bdb-filespec (namestring (iou:make-tmp-pathname
-                                   :basename "bdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
-    (dbm-open db bdb-filespec :write :create)
-    (loop
-       for i from 0 below 100
-       do (dbm-put db (format nil "key-~a" i) (format nil "value-~a" i)))
-    (&body)
-    (dbm-close db)
-    (delete-file bdb-filespec)))
+(deftestsuite bdb-tests (cl-tokyo-cabinet-tests)
+  ())
 
-(def-fixture hdb-empty ()
-  (let ((db (make-instance 'tc-hdb))
-        (bdb-filespec (namestring (iou:make-tmp-pathname
-                                   :basename "hdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
-    (dbm-open db bdb-filespec :write :create)
-    (&body)
-    (dbm-close db)
-    (delete-file bdb-filespec)))
+(deftestsuite hdb-tests (cl-tokyo-cabinet-tests)
+  ())
 
-(def-fixture hdb-100 ()
-  (let ((db (make-instance 'tc-hdb))
-        (hdb-filespec (namestring (iou:make-tmp-pathname
-                                   :basename "hdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
-    (dbm-open db hdb-filespec :write :create)
-    (loop
-       for i from 0 below 100
-       do (dbm-put db (format nil "key-~a" i) (format nil "value-~a" i)))
-    (&body)
-    (dbm-close db)
-    (delete-file hdb-filespec)))
+(deftestsuite bdb-empty-tests (bdb-tests)
+  ((db (make-instance 'tc-bdb))
+   (bdb-filespec (namestring (dxi:make-tmp-pathname
+                              :basename "bdb" :type "db"
+                              :tmpdir (merge-pathnames "data")))))
+  (:setup (dbm-open db bdb-filespec :write :create))
+  (:teardown (dbm-close db)
+             (delete-file bdb-filespec)))
+
+(deftestsuite bdb-100-tests (bdb-tests)
+  ((db (make-instance 'tc-bdb))
+   (bdb-filespec (namestring (dxi:make-tmp-pathname
+                              :basename "bdb" :type "db"
+                              :tmpdir (merge-pathnames "data")))))
+  (:setup (dbm-open db bdb-filespec :write :create)
+          (loop
+             for i from 0 below 100
+             do (dbm-put db (format nil "key-~a" i) (format nil "value-~a" i))))
+  (:teardown (dbm-close db)
+             (delete-file bdb-filespec)))
+
+(deftestsuite hdb-empty-tests (hdb-tests)
+  ((db (make-instance 'tc-hdb))
+   (hdb-filespec (namestring (dxi:make-tmp-pathname
+                              :basename "hdb" :type "db"
+                              :tmpdir (merge-pathnames "data")))))
+  (:setup (dbm-open db hdb-filespec :write :create))
+  (:teardown (dbm-close db)
+             (delete-file hdb-filespec)))
+
+(deftestsuite hdb-100-tests (hdb-tests)
+  ((db (make-instance 'tc-hdb))
+   (hdb-filespec (namestring (dxi:make-tmp-pathname
+                              :basename "hdb" :type "db"
+                              :tmpdir (merge-pathnames "data")))))
+  (:setup (dbm-open db hdb-filespec :write :create)
+          (loop
+             for i from 0 below 100
+             do (dbm-put db (format nil "key-~a" i) (format nil "value-~a" i))))
+  (:teardown (dbm-close db)
+             (delete-file hdb-filespec)))

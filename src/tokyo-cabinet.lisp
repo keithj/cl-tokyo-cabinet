@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2008 Keith James. All rights reserved.
+;;; Copyright (C) 2008-2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,9 +15,7 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :cl-tokyo-cabinet)
-
-;; (declaim (optimize (debug 3) (safety 3)))
+(in-package :tokyo-cabinet)
 
 (deftype int32 ()
   "The 32bit built-in DBM key type."
@@ -26,11 +24,6 @@
 (deftype int64 ()
   "The 64bit built-in DBM key type."
   '(signed-byte 64))
-
-(cffi:define-foreign-library libtc
-  (t (:default "libtokyocabinet")))
-
-(cffi:use-foreign-library libtc)
 
 (defparameter *in-transaction-p* nil)
 

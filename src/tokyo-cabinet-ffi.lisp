@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2008 Keith James. All rights reserved.
+;;; Copyright (C) 2008-2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,7 +15,12 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(in-package :tokyo-cabinet-cffi)
+(in-package :tokyo-cabinet-ffi)
+
+(cffi:define-foreign-library libtc
+  (t (:default "libtokyocabinet")))
+
+(cffi:use-foreign-library libtc)
 
 (defconstant +tcesuccess+ 0)
 (defconstant +tcethread+ 1)
@@ -51,26 +56,30 @@
   :write
   :create
   :truncate
+  :nolock
   :noblock
-  :nolock)
+  :tsync)
 
 (defbitfield hdb-open-flags
   :read
   :write
   :create
   :truncate
+  :nolock
   :noblock
-  :nolock)
+  :tsync)
 
 (defbitfield bdb-options
   :large
   :deflate
+  :bzip
   :tcbs
   (:defaults #xff))
 
 (defbitfield hdb-options
   :large
   :deflate
+  :bzip
   :tcbs
   (:defaults #xff))
 

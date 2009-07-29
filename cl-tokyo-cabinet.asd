@@ -1,5 +1,7 @@
 ;;;
-;;; Copyright (C) 2008 Keith James. All rights reserved.
+;;; Copyright (C) 2008-2009 Keith James. All rights reserved.
+;;;
+;;; This file is part of cl-tokyo-cabinet.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -17,54 +19,41 @@
 
 (in-package :cl-user)
 
-(defpackage #:cl-tokyo-cabinet-system
-  (:use :common-lisp :asdf)
-  (:export #:testsuite))
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (when (asdf:find-system :deoxybyte-systems nil)
+    (asdf:operate 'asdf:load-op :deoxybyte-systems)))
 
-(in-package #:cl-tokyo-cabinet-system)
+(defpackage :cl-tokyo-cabinet-system
+  (:use :common-lisp :asdf :deoxybyte-systems)
+  (:export :testsuite))
+
+(in-package :cl-tokyo-cabinet-system)
 
 (defsystem cl-tokyo-cabinet
     :name "Common Lisp Tokyo Cabinet"
-    :author "Keith James"
     :version "0.1.0"
-    :licence "GPL"
-    :depends-on (:cffi)
+    :author "Keith James"
+    :licence "GPL v3"
+    :depends-on ((:version :cffi "0.10.3"))
+    :in-order-to ((test-op (load-op :cl-tokyo-cabinet :cl-tokyo-cabinet-test)))
     :components ((:module :cl-tokyo-cabinet
                           :pathname "src/"
                           :components
                           ((:file "package")
-                           (:file "tokyo-cabinet-cffi"
+                           (:file "tokyo-cabinet-ffi"
                                   :depends-on ("package"))
-                           (:file "cl-tokyo-cabinet"
+                           (:file "tokyo-cabinet"
                                   :depends-on ("package"
-                                               "tokyo-cabinet-cffi"))
+                                               "tokyo-cabinet-ffi"))
                            (:file "tokyo-cabinet-bdb"
                                   :depends-on ("package"
-                                               "tokyo-cabinet-cffi"
-                                               "cl-tokyo-cabinet"))
+                                               "tokyo-cabinet-ffi"
+                                               "tokyo-cabinet"))
                            (:file "tokyo-cabinet-hdb"
                                   :depends-on ("package"
-                                               "tokyo-cabinet-cffi"
-                                               "cl-tokyo-cabinet"))))))
+                                               "tokyo-cabinet-ffi"
+                                               "tokyo-cabinet"))))
+                 (:lift-test-config :lift-tests
+                                    :pathname "cl-tokyo-cabinet-test.config"
+                                    :target-system :cl-tokyo-cabinet)))
 
-(in-package #:asdf)
-
-(defmethod perform ((op test-op) (c (eql (find-system
-                                          :cl-tokyo-cabinet))))
-  (operate 'load-op :cl-tokyo-cabinet-test)
-  (let ((*default-pathname-defaults* (component-pathname c)))
-    (funcall (intern (string :run!) (string :fiveam))
-             'cl-tokyo-cabinet-system:testsuite)))
-
-(defmethod operation-done-p ((op test-op) (c (eql (find-system
-                                                   :cl-tokyo-cabinet))))
-  nil)
-
-(defmethod perform ((op cldoc-op) (c (eql (find-system
-                                           :cl-tokyo-cabinet))))
-  (unless (find-package :cl-tokyo-cabinet)
-    (operate 'load-op :cl-tokyo-cabinet))
-  (let ((*default-pathname-defaults* (component-pathname c))
-        (fn-sym (intern (string :extract-documentation) (string :cldoc)))
-        (op-sym (intern (string :html) (string :cldoc))))
-    (funcall fn-sym op-sym "./doc/html" c)))

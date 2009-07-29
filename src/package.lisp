@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2008 Keith James. All rights reserved.
+;;; Copyright (C) 2008-2009 Keith James. All rights reserved.
 ;;;
 ;;; This program is free software: you can redistribute it and/or modify
 ;;; it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ;;;
 
-(defpackage #:tokyo-cabinet-cffi
-  (:use #:common-lisp :cffi)
+(defpackage :tokyo-cabinet-ffi
+  (:use #:common-lisp #:cffi)
   (:export
    ;; Constants
    #:+tcesuccess+
@@ -149,8 +149,8 @@
    #:tchdbrnum
    #:tchdbfsiz))
 
-(defpackage #:cl-tokyo-cabinet
-  (:use #:common-lisp :cffi :tokyo-cabinet-cffi)
+(defpackage :tokyo-cabinet
+  (:use #:common-lisp #:cffi #:tokyo-cabinet-ffi)
   (:nicknames #:tc)
   (:export
    ;; Constants
@@ -197,5 +197,4 @@
    ;; Macros
    #:with-database
    #:with-transaction
-   #:with-iterator
-   ))
+   #:with-iterator))
