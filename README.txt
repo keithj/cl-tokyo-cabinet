@@ -1,8 +1,9 @@
 
 Introduction
 
-The cl-tokyo-cabinet provides access to the Tokyo Cabinet DBM library
-by Mikio Hirabayashi, via CFFI. See http://tokyocabinet.sourceforge.net
+The cl-tokyo-cabinet system provides access to the Tokyo Cabinet DBM
+library by Mikio Hirabayashi, via CFFI. See
+http://tokyocabinet.sourceforge.net
 
 This project is an experiment to see what Tokyo Cabinet performance
 would be like, used from Common Lisp. So far, I'm not entirely happy
