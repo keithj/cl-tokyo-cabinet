@@ -24,8 +24,8 @@
     (asdf:operate 'asdf:load-op :deoxybyte-systems)))
 
 (defpackage :cl-tokyo-cabinet-system
-  (:use :common-lisp :asdf :deoxybyte-systems)
-  (:export :testsuite))
+  (:use :common-lisp :asdf)
+  (:import-from :deoxybyte-systems :lift-test-config :cldoc-config))
 
 (in-package :cl-tokyo-cabinet-system)
 
@@ -56,4 +56,3 @@
                  (:lift-test-config :lift-tests
                                     :pathname "cl-tokyo-cabinet-test.config"
                                     :target-system :cl-tokyo-cabinet)))
-
