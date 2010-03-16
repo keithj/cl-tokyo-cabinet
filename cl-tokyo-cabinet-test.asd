@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (C) 2008-2009 Keith James. All rights reserved.
+;;; Copyright (C) 2008-2010 Keith James. All rights reserved.
 ;;;
 ;;; This file is part of cl-tokyo-cabinet.
 ;;;
@@ -20,7 +20,9 @@
 (in-package :cl-tokyo-cabinet-system)
 
 (defsystem cl-tokyo-cabinet-test
-    :depends-on (:cl-tokyo-cabinet :lift :deoxybyte-io)
+    :depends-on (:cl-tokyo-cabinet
+                 :deoxybyte-io
+                 (:version :lift "1.7.0"))
     :components ((:module :cl-tokyo-cabinet-test
                           :serial t
                           :pathname "src/test/"
