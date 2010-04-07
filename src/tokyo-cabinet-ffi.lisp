@@ -137,6 +137,10 @@
   (lcnum :pointer)
   (ncnum :pointer))
 
+(cffi:defcfun ("tcbdbsetxmsiz" tcbdbsetxmsiz) :boolean
+  (bdb :pointer)
+  (xmsiz :int64))
+
 (cffi:defcfun ("tcbdbopen" tcbdbopen) :boolean
   (bdb :pointer)
   (path :string)
@@ -534,6 +538,10 @@
 (cffi:defcfun ("tchdbsetcache" tchdbsetcache) :boolean
   (hdb :pointer)
   (rcnum :int32))
+
+(cffi:defcfun ("tchdbsetxmsiz" tchdbsetxmsiz) :boolean
+  (hdb :pointer)
+  (xmsiz :int64))
 
 (cffi:defcfun ("tchdbopen" tchdbopen) :boolean
   (hdb :pointer)

@@ -39,7 +39,8 @@
 (in-package :tokyo-cabinet)
 
 (defmethod initialize-instance :after ((db tc-hdb) &key)
-  (with-slots (ptr) db
+  (with-slots (ptr)
+      db
     (setf ptr (tchdbnew))))
 
 (defmethod raise-error ((db tc-hdb) &optional text)
@@ -151,6 +152,9 @@
 
 (defmethod dbm-cache ((db tc-hdb) &key (records 0))
   (tchdbsetcache (ptr-of db) records))
+
+(defmethod dbm-xmsize ((db tc-hdb) (size integer))
+  (tchdbsetxmsiz (ptr-of db) size))
 
 (defun %hdb-put-fn (mode)
   (ecase mode

@@ -82,6 +82,7 @@
    #:tcbdbsetcmpfunc
    #:tcbdbtune
    #:tcbdbsetcache
+   #:tcbdbsetxmsiz
    #:tcbdbopen
    #:tcbdbclose
    #:tcbdbput
@@ -140,6 +141,7 @@
 
    #:tchdbtune
    #:tchdbsetcache
+   #:tchdbsetxmsiz
    #:tchdbopen
    #:tchdbclose
    #:tchdbput

@@ -39,7 +39,8 @@
 (in-package :tokyo-cabinet)
 
 (defmethod initialize-instance :after ((db tc-bdb) &key)
-  (with-slots (ptr) db
+  (with-slots (ptr)
+      db
     (setf ptr (tcbdbnew))))
 
 (defmethod set-comparator ((db tc-bdb) (comparator symbol))
@@ -213,6 +214,9 @@
 
 (defmethod dbm-cache ((db tc-bdb) &key (leaf 1024) (non-leaf 512))
   (tcbdbsetcache (ptr-of db) leaf non-leaf))
+
+(defmethod dbm-xmsize ((db tc-bdb) (size integer))
+  (tcbdbsetxmsiz (ptr-of db) size))
 
 (defun %bdb-put-fn (mode)
   (ecase mode
