@@ -50,7 +50,7 @@
 
 (defsystem cl-tokyo-cabinet
     :name "Common Lisp Tokyo Cabinet"
-    :version "0.1.0"
+    :version "0.1.1"
     :author "Keith James"
     :licence "New BSD"
     :depends-on ((:version :cffi "0.10.3"))

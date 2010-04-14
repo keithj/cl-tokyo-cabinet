@@ -167,6 +167,10 @@
    #:tchdbsync
    #:tchdboptimize
    #:tchdbvanish
+   #:tchdbcopy
+   #:tchdbtranbegin
+   #:tchdbtrancommit
+   #:tchdbtranabort
 
    #:tchdbpath
    #:tchdbrnum

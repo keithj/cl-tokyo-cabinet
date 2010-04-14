@@ -673,9 +673,18 @@
 (cffi:defcfun ("tchdbvanish" tchdbvanish) :boolean
   (hdb :pointer))
 
-;; (cffi:defcfun ("tchdbcopy" tchdbcopy) :pointer
-;;   (hdb :pointer)
-;;   (path :string))
+(cffi:defcfun ("tchdbcopy" tchdbcopy) :pointer
+  (hdb :pointer)
+  (path :string))
+
+(cffi:defcfun ("tchdbtranbegin" tchdbtranbegin) :boolean
+  (hdb :pointer))
+
+(cffi:defcfun ("tchdbtrancommit" tchdbtrancommit) :boolean
+  (hdb :pointer))
+
+(cffi:defcfun ("tchdbtranabort" tchdbtranabort) :boolean
+  (hdb :pointer))
 
 (cffi:defcfun ("tchdbpath" tchdbpath) :string
   (hdb :pointer))

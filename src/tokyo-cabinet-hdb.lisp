@@ -76,6 +76,18 @@
 (defmethod dbm-vanish ((db tc-hdb))
   (tchdbvanish (ptr-of db)))
 
+(defmethod dbm-begin ((db tc-hdb))
+  (unless (tchdbtranbegin (ptr-of db))
+    (raise-error db)))
+
+(defmethod dbm-commit ((db tc-hdb))
+  (unless (tchdbtrancommit (ptr-of db))
+    (raise-error db)))
+
+(defmethod dbm-abort ((db tc-hdb))
+  (unless (tchdbtranabort (ptr-of db))
+    (raise-error db)))
+
 (defmethod dbm-get ((db tc-hdb) (key string) &optional (type :string))
   (ecase type
     (:string (get-string->string db key #'tchdbget2))
@@ -85,6 +97,12 @@
   (ecase type
     (:string (get-int32->string db key #'tchdbget))
     (:octets (get-int32->octets db key #'tchdbget))))
+
+;;;;;;
+(defmethod dbm-put ((db tc-hdb) (key vector) (value vector)
+                    &key (mode :replace))
+  (put-octets->octets db key value (%hdb-put-fn mode)))
+;;;;;;
 
 (defmethod dbm-put ((db tc-hdb) (key string) (value string)
                     &key (mode :replace))
