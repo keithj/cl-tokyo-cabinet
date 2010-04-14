@@ -130,3 +130,25 @@
              for i from 0 below 100
              for value = (format nil "value-~a" i)
              always (string= (dbm-get db i) value))))
+
+(addtest (hdb-tests) with-database/hdb/1
+  (let ((hdb-filespec (namestring (dxi:make-tmp-pathname
+                                   :basename "hdb" :type "db"
+                                   :tmpdir (merge-pathnames "data")))))
+    (with-database (db hdb-filespec 'tc-hdb :write :create)
+       (ensure (dbm-put db "key-one" "value-one"))
+       (ensure (string= "value-one" (dbm-get db "key-one"))))
+    (ensure (fad:file-exists-p hdb-filespec))
+    (delete-file hdb-filespec)))
+
+(addtest (hdb-tests) with-transaction/hdb/1
+  (let ((hdb-filespec (namestring (dxi:make-tmp-pathname
+                                   :basename "hdb" :type "db"
+                                   :tmpdir (merge-pathnames "data")))))
+    (with-database (db hdb-filespec 'tc-hdb :write :create)
+      (ensure-error
+        (with-transaction (db)
+          (ensure (dbm-put db "key-one" "value-one"))
+          (error "Test error.")))
+      (ensure-null (dbm-get db "key-one"))) ; should rollback
+    (delete-file hdb-filespec)))
