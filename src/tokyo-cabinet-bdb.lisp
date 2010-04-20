@@ -102,6 +102,10 @@
     (:string (get-int32->string db key #'tcbdbget))
     (:octets (get-int32->octets db key #'tcbdbget))))
 
+(defmethod dbm-put ((db tc-bdb) (key vector) (value vector)
+                    &key (mode :replace))
+  (put-octets->octets db key value (%bdb-put-fn mode)))
+
 (defmethod dbm-put ((db tc-bdb) (key string) (value string) 
                     &key (mode :replace))
   (put-string->string db key value (%bdb-str-put-fn mode)))
