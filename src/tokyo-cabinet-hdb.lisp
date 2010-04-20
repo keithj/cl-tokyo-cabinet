@@ -43,19 +43,22 @@
       db
     (setf ptr (tchdbnew))))
 
-(defmethod raise-error ((db tc-hdb) &optional text)
+(defmethod raise-error ((db tc-hdb) &optional (message "")
+                        &rest message-arguments)
   (let* ((code (tchdbecode (ptr-of db)))
          (msg (tchdberrmsg code)))
-    (error 'dbm-error :error-code code :error-msg msg :text text)))
+    (error 'dbm-error :error-code code :error-msg msg
+           :text (apply #'format nil message message-arguments))))
 
-(defmethod maybe-raise-error ((db tc-hdb) &optional text)
+(defmethod maybe-raise-error ((db tc-hdb) &optional message
+                              &rest message-arguments)
   (let ((ecode (tchdbecode (ptr-of db))))
     (cond ((= +tcesuccess+ ecode)
            t)
           ((= +tcenorec+ ecode)
            nil)
           (t
-           (raise-error db text)))))
+           (apply #'raise-error db message message-arguments)))))
 
 (defmethod dbm-open ((db tc-hdb) filename &rest mode)
   (let ((db-ptr (ptr-of db)))

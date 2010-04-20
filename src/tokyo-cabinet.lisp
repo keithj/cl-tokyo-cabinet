@@ -46,18 +46,22 @@
   "The 64bit built-in DBM key type."
   '(signed-byte 64))
 
-(defparameter *in-transaction-p* nil)
+(defparameter *in-transaction-p* nil
+  "Bound when in a transaction.")
 
 (define-condition dbm-error (error)
   ((error-code :initform nil
                :initarg :error-code
-               :reader error-code-of)
+               :reader error-code-of
+               :documentation "The error code provided by TC.")
    (error-msg :initform nil
               :initarg :error-msg
-              :reader error-msg-of)
+              :reader error-msg-of
+              :documentation "The error message provided by TC.")
    (text :initform nil
          :initarg :text
-         :reader text))
+         :reader text
+         :documentation "Any additional message provided by the CL API."))
   (:report (lambda (condition stream)
              (format stream "DBM error (~a) ~a~@[: ~a~]."
                      (error-code-of condition)
@@ -82,7 +86,8 @@
   ((ptr :initarg :ptr
         :accessor ptr-of
         :documentation "A TC pointer."))
-  (:documentation "A TC database iterator."))
+  (:documentation "A TC database iterator, the superclass of both B+
+tree cursors and hash iterators."))
 
 (defclass bdb-iterator (tc-iterator)
   ()
@@ -115,7 +120,7 @@ Arguments:
 - db (object): A TC dbm object.
 
 Returns:
-T on success, or NIL otherwise."))
+- T on success, or NIL otherwise."))
 
 (defgeneric dbm-delete (db)
   (:documentation "Deletes a TC database. If open, implicitly closes
@@ -125,61 +130,169 @@ Arguments:
 - db (object): A TC dbm object.
 
 Returns: 
-NIL ."))
+- NIL ."))
 
-(defgeneric dbm-vanish (db))
 
-(defgeneric dbm-begin (db))
+(defgeneric dbm-vanish (db)
+  (:documentation "Removes all records from DB."))
 
-(defgeneric dbm-commit (db))
+(defgeneric dbm-begin (db)
+  (:documentation "Begins a transaction with DB."))
 
-(defgeneric dbm-abort (db))
+(defgeneric dbm-commit (db)
+  (:documentation "Commits a transaction with DB."))
 
-(defgeneric dbm-put (db key value &key mode))
+(defgeneric dbm-abort (db)
+  (:documentation "Aborts a transaction with DB."))
 
-(defgeneric dbm-get (db key &optional type))
+(defgeneric dbm-put (db key value &key mode)
+  (:documentation "Inserts KEY and VALUE into DB. MODE varies with DB
+class. Valid modes for B+ tree databases are: :REPLACE , :KEEP ,
+:CONCAT or :DUPLICATE . Valid modes for hash databases are :REPLACE ,
+:KEEP , :CONCAT or :ASYNC ."))
 
-(defgeneric dbm-rem (db key &key remove-dups))
+(defgeneric dbm-get (db key &optional type)
+  (:documentation "Returns the value under KEY in DB. Type may be one
+of :STRING or :OCTETS , depending on how the value is to be
+treated. :STRING indicates that the value should be converted to a
+Lisp string, while :OCTETS indicates that the byte vector should be
+returned."))
 
-(defgeneric iter-open (db))
+(defgeneric dbm-rem (db key &key remove-dups)
+  (:documentation "Removes the value under KEY in DB. If REMOVE-DUPS
+is T, duplicate values will be removed from a B+ tree database."))
 
-(defgeneric iter-close (iter))
+(defgeneric iter-open (db)
+  (:documentation "Opens an iterator on DB.
 
-(defgeneric iter-first (iter))
+Arguments:
 
-(defgeneric iter-last (iter))
+- db (object): A TC dbm object.
 
-(defgeneric iter-prev (iter))
+Returns:
+ - A TC iterator object."))
 
-(defgeneric iter-next (iter))
+(defgeneric iter-close (iterator)
+  (:documentation "Closes ITERATOR. Only effective for B+ tree
+databases."))
 
-(defgeneric iter-jump (iter key))
+(defgeneric iter-first (iterator)
+  (:documentation "Moves ITERATOR to the first record and returns T,
+or NIL if the database is empty. Only effective for B+ tree
+databases."))
 
-(defgeneric iter-get (iter &optional :type))
+(defgeneric iter-last (iterator)
+  (:documentation "Moves ITERATOR to the last record and returns T, or
+NIL if the database is empty. Only effective for B+ tree databases."))
 
-(defgeneric iter-put (iter value &key mode))
+(defgeneric iter-prev (iterator)
+  (:documentation "Moves ITERATOR to the previous record and returns
+T, or NIL if already at the first record. Only effective for B+ tree
+databases."))
 
-(defgeneric iter-rem (iter))
+(defgeneric iter-next (iterator)
+  (:documentation "Moves ITERATOR to the next record and returns T, or
+NIL if already at the last record."))
 
-(defgeneric iter-key (iter &optional :type))
+(defgeneric iter-jump (iterator key)
+  (:documentation "Moves ITERATOR to the record at KEY. Only effective
+for B+ tree databases."))
 
-(defgeneric dbm-num-records (db))
+(defgeneric iter-get (iterator &optional type)
+  (:documentation "Returns the current value at ITERATOR. Type may be
+one of :STRING or :OCTETS , depending on how the value is to be
+treated. :STRING indicates that the value should be converted to a
+Lisp string, while :OCTETS indicates that the byte vector should be
+returned."))
 
-(defgeneric dbm-file-namestring (db))
+(defgeneric iter-put (iterator value &key mode)
+  (:documentation "Inserts VALUE around ITERATOR. Mode may be one
+of :CURRENT , :BEFORE or :AFTER . Only effective for B+ tree
+databases."))
 
-(defgeneric dbm-file-size (db))
+(defgeneric iter-rem (iterator)
+  (:documentation "Removed the record at the ITERATOR position and
+advances ITERATOR, if possible. Only effective for B+ tree
+databases."))
 
-(defgeneric dbm-optimize (db &rest args))
+(defgeneric iter-key (iterator &optional type)
+  (:documentation "Returns current key at the ITERATOR position. Type
+may be one of :STRING or :OCTETS , depending on how the value is to be
+treated. :STRING indicates that the value should be converted to a
+Lisp string, while :OCTETS indicates that the byte vector should be
+returned."))
 
-(defgeneric dbm-cache (db &rest args))
+(defgeneric dbm-num-records (db)
+  (:documentation "Returns the number of records in DB."))
 
-(defgeneric set-comparator (db fn))
+(defgeneric dbm-file-namestring (db)
+  (:documentation "Returns the name of the DB file."))
 
-(defgeneric raise-error (db &optional text))
+(defgeneric dbm-file-size (db)
+  (:documentation "Returns the size of the DB file in bytes."))
 
-(defgeneric maybe-raise-error (db &optional text))
+(defgeneric dbm-optimize (db &rest args)
+  (:documentation "Sets the DB optimization parameters. These are
+described in the TC documentation.
+
+The keyword arguments for B+ tree databases are:
+
+ :LEAF :NON-LEAF :BUCKET-SIZE :REC-ALIGN :FREE-POOL and :OPTS
+
+The keyword arguments for hash databases are:
+
+ :BUCKET-SIZE :REC-ALIGN :FREE-POOL and :OPTS
+
+In both cases the :OPTS value is a list of one or more
+of :LARGE :DEFLATE :BZIP :TCBS and :DEFAULTS
+
+For example:
+
+;;; (dbm-optimize db :leaf 512 :non-leaf 256 :bucket-size 100000000
+;;;                  :rec-align 4 :free-pool 10 :opts '(:large :deflate))"))
+
+(defgeneric dbm-cache (db &rest args)
+  (:documentation "Sets the caching parameters of DB. These are
+described in the TC documentation.
+
+The keyword arguments for B+ tree databases are:
+
+:LEAF and :NON-LEAF
+
+The keyword arguments for hash databases are:
+
+:RECORDS"))
+
+(defgeneric set-comparator (db fn)
+  (:documentation "Sets the DB comparator function given by symbol FN."))
+
+(defgeneric raise-error (db &optional message &rest message-arguments)
+  (:documentation "Raises a {define-condition dbm-error} with
+MESSAGE. MESSAGE may be a format template, in which case the rest of
+the arguments are taken to be format arguments for that template. The
+error code and TC error message are automatically obtained from the DB
+handle."))
+
+(defgeneric maybe-raise-error (db &optional message &rest message-arguments)
+  (:documentation "Checks the DB handle for any error reported by TC
+and raises a {define-condition dbm-error} if one has occurred by
+calling {defun raise-error} ."))
 
 (defmacro with-database ((var filespec type &rest mode) &body body)
+  "Evaluates BODY with VAR bound to an open database.
+
+Arguments:
+
+- var (symbol): The binding for the new database object.
+- filespec (filespec): The database file.
+- type (symbol): A symbol that names a TC database class.
+
+Rest:
+
+- mode (symbols): :READ :WRITE :CREATE :TRUNCATE
+                  :NOLOCK :NOBLOCK and :TSYNC
+
+See the TC documentation for the meaning of the mode arguments."
   `(let ((,var (make-instance ,type)))
      (unwind-protect
           (progn
@@ -189,6 +302,10 @@ NIL ."))
          (dbm-close ,var)))))
 
 (defmacro with-transaction ((db) &body body)
+  "Evaluates BODY in the context of a transaction on DB. If no
+transaction is in progress, a new one is started. If a transaction is
+already in progress, BODY is evaluated in its context. If an error
+occurs, the transaction will rollback, otherwise it will commit."
   (let ((success (gensym)))
     `(let ((,success nil))
        (flet ((atomic-op ()
@@ -376,20 +493,3 @@ null-terminated."
        for i from 0 below size
        do (setf (aref value i) (mem-aref value-ptr :unsigned-char i))
        finally (return value))))
-
-
-;; (defun your-wrapper-around-the-foreign-function (...)
-;;   (let ((ptr (your-foreign-function ...)))
-;;     (unwind-protect
-;;         (foreign-string-to-lisp ptr)
-;;       (foreign-funcall "free" :pointer ptr))))
-
-;; (defctype my-string :pointer)
-
-;; (define-type-translator my-string :from-c (value)
-;;   "Converts a foreign string to lisp, and frees it."
-;;   (once-only (value)
-;;     `(unwind-protect (foreign-string-to-lisp ,value)
-;;        (foreign-funcall "free" :pointer ptr))))
-
-;; (defcfun your-foreign-function my-string ...)

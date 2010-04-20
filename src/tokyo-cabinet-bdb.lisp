@@ -47,19 +47,22 @@
   (tcbdbsetcmpfunc (ptr-of db) (or (%builtin-comparator comparator)
                                    comparator) (null-pointer)))
 
-(defmethod raise-error ((db tc-bdb) &optional text)
+(defmethod raise-error ((db tc-bdb) &optional (message "")
+                        &rest message-arguments)
   (let* ((code (tcbdbecode (ptr-of db)))
          (msg (tcbdberrmsg code)))
-    (error 'dbm-error :error-code code :error-msg msg :text text)))
+    (error 'dbm-error :error-code code :error-msg msg
+           :text (apply #'format nil message message-arguments))))
 
-(defmethod maybe-raise-error ((db tc-bdb) &optional text)
+(defmethod maybe-raise-error ((db tc-bdb) &optional message
+                              &rest message-arguments)
   (let ((ecode (tcbdbecode (ptr-of db))))
     (cond ((= +tcesuccess+ ecode)
            t)
           ((= +tcenorec+ ecode)
            nil)
           (t
-           (raise-error db text)))))
+           (apply #'raise-error db message message-arguments)))))
 
 (defmethod dbm-open ((db tc-bdb) filespec &rest mode)
   (let ((db-ptr (ptr-of db)))
