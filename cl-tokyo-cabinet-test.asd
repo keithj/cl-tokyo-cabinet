@@ -44,7 +44,7 @@
                  (:version :lift "1.7.0"))
     :components ((:module :cl-tokyo-cabinet-test
                           :serial t
-                          :pathname "src/test/"
+                          :pathname "test/"
                           :components ((:file "package")
                                        (:file "cl-tokyo-cabinet-test")
                                        (:file "tokyo-cabinet-bdb-test")
