@@ -62,7 +62,7 @@
 
 (defmethod dbm-open ((db tc-hdb) filename &rest mode)
   (let ((db-ptr (ptr-of db)))
-    (validate-open-mode mode)
+    (check-open-mode mode)
     (unless (tchdbopen db-ptr filename mode) ; opens db by side-effect
       (let* ((code (tchdbecode db-ptr))
              (msg (tchdberrmsg code)))
@@ -175,6 +175,7 @@
 (defmethod dbm-xmsize ((db tc-hdb) (size integer))
   (tchdbsetxmsiz (ptr-of db) size))
 
+(declaim (inline %hdb-put-fn))
 (defun %hdb-put-fn (mode)
   (ecase mode
     (:replace #'tchdbput)
@@ -182,6 +183,7 @@
     (:concat #'tchdbputcat)
     (:async #'tchdbputasync)))
 
+(declaim (inline %hdb-str-put-fn))
 (defun %hdb-str-put-fn (mode)
   (ecase mode
     (:replace #'tchdbput2)

@@ -66,7 +66,7 @@
 
 (defmethod dbm-open ((db tc-bdb) filespec &rest mode)
   (let ((db-ptr (ptr-of db)))
-    (validate-open-mode mode)
+    (check-open-mode mode)
     (unless (tcbdbopen db-ptr filespec mode) ; opens db by side-effect
       (let* ((code (tcbdbecode db-ptr))
              (msg (tcbdberrmsg code)))
@@ -225,6 +225,7 @@
 (defmethod dbm-xmsize ((db tc-bdb) (size integer))
   (tcbdbsetxmsiz (ptr-of db) size))
 
+(declaim (inline %bdb-put-fn))
 (defun %bdb-put-fn (mode)
   (ecase mode
     (:replace #'tcbdbput)
@@ -232,6 +233,7 @@
     (:concat #'tcbdbputcat)
     (:duplicate #'tcbdbputdup)))
 
+(declaim (inline %bdb-str-put-fn))
 (defun %bdb-str-put-fn (mode)
   (ecase mode
     (:replace #'tcbdbput2)
@@ -239,6 +241,7 @@
     (:concat #'tcbdbputcat2)
     (:duplicate #'tcbdbputdup2)))
 
+(declaim (inline %builtin-comparator))
 (defun %builtin-comparator (type)
   (foreign-symbol-pointer (case type
                             (:lexical "tccmpintlexical")
@@ -246,6 +249,7 @@
                             (:int32 "tccmpint32")
                             (:int64 "tccmpint64"))))
 
+(declaim (inline %bdb-iter-mode))
 (defun %bdb-iter-mode (mode)
   (ecase mode
     (:current +bdbcpcurrent+)

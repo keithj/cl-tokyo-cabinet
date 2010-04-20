@@ -43,6 +43,15 @@
     (ensure (cffi:pointerp (tc::ptr-of db)))
     (dbm-delete db)))
 
+(addtest (bdb-tests) raise-error/bdb/1
+  (let ((db (make-instance 'tc-bdb)))
+    (ensure-condition dbm-error
+      (tc::raise-error db))
+    (ensure-condition dbm-error
+      (tc::raise-error db "no args message"))
+    (ensure-condition dbm-error
+      (tc::raise-error db "message with ~a" ""))))
+
 (addtest (bdb-tests) dbm-open/bdb/1
   (let ((db (make-instance 'tc-bdb))
         (bdb-filespec (namestring (dxi:make-tmp-pathname
