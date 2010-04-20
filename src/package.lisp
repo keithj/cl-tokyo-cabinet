@@ -217,6 +217,7 @@
    #:dbm-file-size
    #:dbm-optimize
    #:dbm-cache
+   #:dbm-xmsize
    #:set-comparator
    
    ;; Functions
