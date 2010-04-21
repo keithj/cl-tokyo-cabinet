@@ -263,8 +263,12 @@ The keyword arguments for hash databases are:
 
 :RECORDS"))
 
+(defgeneric dbm-xmsize (db size)
+  (:documentation "Sets the DB extra mapped memory to SIZE bytes."))
+
 (defgeneric set-comparator (db fn)
-  (:documentation "Sets the DB comparator function given by symbol FN."))
+  (:documentation "Sets the DB comparator function to that given by
+symbol FN."))
 
 (defgeneric raise-error (db &optional message &rest message-arguments)
   (:documentation "Raises a {define-condition dbm-error} with
