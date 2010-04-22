@@ -1,0 +1,11 @@
+
+Tests were carried out on x86_64 Intel Core2 Duo 2.40GHz with 4Gb RAM,
+Tokyo Cabinet 1.4.43 and SBCL 1.0.37.
+
+The largest performance improvements came from tuning the database
+parameters, rather than optimising the Lisp code. However, further
+progress can be probably be made with both approaches.
+
+As the BDB test dataset reached 10^7 records, CPU-time shrank to a
+fraction of wall-time. At this point, setting the deflate flag can
+yield signifcant benefits.

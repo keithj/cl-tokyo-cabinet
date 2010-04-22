@@ -2,21 +2,21 @@
 Introduction
 
 The cl-tokyo-cabinet system provides access to the Tokyo Cabinet DBM
-library by Mikio Hirabayashi, via CFFI. See
-http://tokyocabinet.sourceforge.net
+library by Mikio Hirabayashi, via CFFI. See http://1978th.net/tokyocabinet/
 
-This project is an experiment to see what Tokyo Cabinet performance
-would be like, used from Common Lisp. So far, I'm not entirely happy
-with the result, which I'm sure is down to inadequacies in my code.
+This project started as an experiment to see what Tokyo Cabinet
+performance would be like when used from Common Lisp. Most of the BDB
+and hash database functionality are implemented. The API is divided
+into two parts; a low-level FFI package which is a direct CFFI
+translation of the Tokyo Cabinet functions and a higher level, more
+Lisp-centric generic function API on top of that.
 
-I'm still working on this when I have the time, but it will remain
-lower priority than my other projects, such as cl-genomic and cl-sam.
+Having now benchmarked insertion speed against equivalent code using
+the C BDB API, the results are encouraging (see the perf directory for
+results). The Lisp API produced a byte-identical database in a
+wall-time of between 1.14x and 1.62x that taken by the C API (median
+of 7 runs each).
 
-- The tests should all pass
-- The performance is poor
-- In retrospect, I think a full generic function interface was
-  unnecessary
-- The docstrings are incomplete
 
 Installation
 
