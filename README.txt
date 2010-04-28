@@ -54,7 +54,7 @@ or with the equivalent deoxybyte-systems:test-system function:
 cl-tokyo-cabinet is tested using:
 
  - SBCL 1.0.37 x86_64
- - CCL 1.6 x86_64
+ - CCL 1.5 x86_64
  - Tokyo Cabinet 1.4.43
 
 
