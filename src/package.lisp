@@ -174,7 +174,9 @@
 
    #:tchdbpath
    #:tchdbrnum
-   #:tchdbfsiz))
+   #:tchdbfsiz)
+  (:documentation "CFFI interface to Tokyo Cabinet functions. The
+  original C function names are preserved."))
 
 (defpackage :tokyo-cabinet
   (:use #:common-lisp #:cffi #:tokyo-cabinet-ffi)
@@ -225,4 +227,8 @@
    ;; Macros
    #:with-database
    #:with-transaction
-   #:with-iterator))
+   #:with-iterator)
+  (:documentation "A Lisp-style abstract interface to Tokyo
+  Cabinet. The original C function names are not preserved (see
+  the :tokyo-cabinet-ffi package for functions that do preserve the
+  nomenclature)."))

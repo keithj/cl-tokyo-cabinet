@@ -14,8 +14,15 @@ Lisp-centric generic function API on top of that.
 Having now benchmarked insertion speed against equivalent code using
 the C BDB API, the results are encouraging (see the perf directory for
 results). The Lisp API produced a byte-identical database in a
-wall-time of between 1.14x and 1.62x that taken by the C API (median
+wall-time of between 1.1x and 1.6x that taken by the C API (median
 of 7 runs each).
+
+
+Future work
+
+ - Duplicated record API for B+ tree databases (requires TCLIST C API).
+ - Range operations for B+ tree databases (requires TCLIST C API).
+ - Implement the table database API.
 
 
 Installation
@@ -34,14 +41,21 @@ or with the equivalent deoxybyte-systems:load-system function:
 
 Tests
 
-To run the unit and regression tests you need to have LIFT
-installed. Run the tests with the asdf:operate function:
+To run the unit and regression tests you need to have LIFT,
+deoxybyte-io and deoxybyte-utilities installed. Run the tests with the
+asdf:operate function:
 
  (asdf:operate 'asdf:test-op :cl-tokyo-cabinet)
 
 or with the equivalent deoxybyte-systems:test-system function:
 
  (dxs:test-system :cl-tokyo-cabinet)
+
+cl-tokyo-cabinet is tested using:
+
+ - SBCL 1.0.37 x86_64
+ - CCL 1.6 x86_64
+ - Tokyo Cabinet 1.4.43
 
 
 Documentation
@@ -62,6 +76,9 @@ CFFI                    http://common-lisp.net/project/cffi/
 
 
 Optional dependencies
+
+deoxybyte-utilities     git://github.com/keithj/deoxybyte-utilities.git
+deoxybyte-io            git://github.com/keithj/deoxybyte-io.git
 
 LIFT                    http://common-lisp.net/project/lift/
 CLDOC                   http://common-lisp.net/project/cldoc/

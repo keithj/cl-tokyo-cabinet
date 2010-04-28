@@ -102,24 +102,30 @@ tree cursors and hash iterators."))
   (:documentation "Opens a new, or existing TC database.
 
 Arguments:
+
 - db (object): A TC dbm object.
 - filespec (string): A pathname designator for the database file.
 
 Rest:
+
 - mode (list symbol): A list of mode keywords used when opening the
 file. The modes are :READ :WRITE :CREATE :TRUNCATE :NOBLOCK :NOLOCK
-which correspond to those described in the TC specification.
+and :TSYNC which correspond to those described in the TC
+specification.
 
 Returns:
-The TC dbm object, now open."))
+
+- The TC dbm object, now open."))
 
 (defgeneric dbm-close (db)
   (:documentation "Closes an open TC database.
 
 Arguments:
+
 - db (object): A TC dbm object.
 
 Returns:
+
 - T on success, or NIL otherwise."))
 
 (defgeneric dbm-delete (db)
@@ -127,11 +133,12 @@ Returns:
 it first.
 
 Arguments:
+
 - db (object): A TC dbm object.
 
 Returns: 
-- NIL ."))
 
+- NIL ."))
 
 (defgeneric dbm-vanish (db)
   (:documentation "Removes all records from DB."))
@@ -147,9 +154,38 @@ Returns:
 
 (defgeneric dbm-put (db key value &key mode)
   (:documentation "Inserts KEY and VALUE into DB. MODE varies with DB
-class. Valid modes for B+ tree databases are: :REPLACE , :KEEP ,
-:CONCAT or :DUPLICATE . Valid modes for hash databases are :REPLACE ,
-:KEEP , :CONCAT or :ASYNC ."))
+class.
+
+Arguments:
+
+- db (object): A TC database object.
+- key (object): A key under which to insert.
+- value (object): A value to insert under key.
+
+Key:
+
+- :mode (symbol): A symbol designating one of the TC insertion modes:
+replace, keep, concat, duplicate, async etc.
+
+Valid modes for B+ tree databases are:
+
+- :REPLACE : If a record with the same key exists in the database, it
+is overwritten.
+- :KEEP : If a record with the same key exists in the database, this
+function has no effect.
+- :CONCAT : Concatenates a value at the end of the existing record in
+the database. If there is no corresponding record, a new record is
+created.
+- :DUPLICATE : Adds a record to the database, allowing duplication of
+keys. If a record with the same key exists in the database, the new
+record is placed after the existing one.
+
+Valid modes for hash databases are:
+
+:REPLACE , :KEEP and :CONCAT , as above. Additionally:
+
+- :ASYNC : Collects inserts into a buffer and then inserts them
+asynchronously, in one operation."))
 
 (defgeneric dbm-get (db key &optional type)
   (:documentation "Returns the value under KEY in DB. Type may be one
@@ -232,19 +268,32 @@ returned."))
   (:documentation "Returns the size of the DB file in bytes."))
 
 (defgeneric dbm-optimize (db &rest args)
-  (:documentation "Sets the DB optimization parameters. These are
-described in the TC documentation.
+  (:documentation "Sets the DB optimization parameters on an open
+database. These are described in the TC documentation.
 
 The keyword arguments for B+ tree databases are:
 
- :LEAF :NON-LEAF :BUCKET-SIZE :REC-ALIGN :FREE-POOL and :OPTS
+- :LEAF (fixnum) : Sets the number of leaf nodes.
+- :NON-LEAF (fixnum) : Sets the number of non-leaf nodes.
+- :BUCKET-SIZE (fixnum) : Sets the bucket
+- :REC-ALIGN (fixnum) : A power of 2 indicating record alignment.
+- :FREE-POOL (fixnum): A power of 2 indicating the size of the free
+record pool.
+
+- :OPTS (list symbol): A list of keywords indicating optional database
+parameters.
 
 The keyword arguments for hash databases are:
 
- :BUCKET-SIZE :REC-ALIGN :FREE-POOL and :OPTS
+:BUCKET-SIZE :REC-ALIGN :FREE-POOL and :OPTS , as above.
 
-In both cases the :OPTS value is a list of one or more
-of :LARGE :DEFLATE :BZIP :TCBS and :DEFAULTS
+In both cases the :OPTS value is a list of one or more of
+
+- :LARGE : Use a 64-bit bucket array to allow datbases > 2Gb.
+- :DEFLATE : Use deflate compression.
+- :BZIP : Use bzip compression.
+- :TCBS : Use tcbs compression.
+- :DEFAULTS : Use the current settings.
 
 For example:
 
@@ -257,11 +306,12 @@ described in the TC documentation.
 
 The keyword arguments for B+ tree databases are:
 
-:LEAF and :NON-LEAF
+- :LEAF : The number of leaf nodes to cache. Defaults to 1024.
+- :NON-LEAF : The number of non-leaf nodes to cache. Defaults to 512.
 
 The keyword arguments for hash databases are:
 
-:RECORDS"))
+- :RECORDS : The number of records to cache. Defaults to 0."))
 
 (defgeneric dbm-xmsize (db size)
   (:documentation "Sets the DB extra mapped memory to SIZE bytes."))
@@ -329,6 +379,7 @@ occurs, the transaction will rollback, otherwise it will commit."
                          (dbm-abort ,db))))))))))
 
 (defmacro with-iterator ((var db) &body body)
+  "Evaluates BODY on with VAR bound to a new, open iterator on DB."
   `(let ((,var (iter-open ,db)))
      (unwind-protect
           (progn
@@ -346,17 +397,21 @@ occurs, the transaction will rollback, otherwise it will commit."
          (foreign-string-free ,value-ptr)))))
 
 (defun check-open-mode (mode)
+  "Checks the list MODE for valid and consistent database opening
+arguments."
   (cond ((and (member :create mode)
               (not (member :write mode)))
          (error 'dbm-error
-           "The :CREATE argument may not be used in :READ mode"))
+                :text "The :CREATE argument may not be used in :READ mode"))
         ((and (member :truncate mode)
               (not (member :write mode)))
          (error 'dbm-error
-                "The :TRUNCATE argument may not be used in :READ mode"))
+                :text "The :TRUNCATE argument may not be used in :READ mode"))
         (t t)))
 
 (defun get-string->string (db key fn)
+  "Returns a value from DB under KEY using FN where the key and value
+are strings."
   (declare (optimize (speed 3)))
   (declare (type function fn))
   (with-string-value (value-ptr (funcall fn (ptr-of db) key))
@@ -365,8 +420,9 @@ occurs, the transaction will rollback, otherwise it will commit."
       (foreign-string-to-lisp value-ptr))))
 
 (defun get-string->octets (db key fn)
-  "Note that for the key we allocate a foreign string that is not
-null-terminated."
+  "Returns a value from DB under KEY using FN where the key is a
+string and the value an octet vector. Note that for the key we
+allocate a foreign string that is not null-terminated."
   (declare (optimize (speed 3)))
   (declare (type function fn))
   (with-foreign-string ((key-ptr key-len) key :null-terminated-p nil)
@@ -378,6 +434,8 @@ null-terminated."
           (copy-foreign-value value-ptr size-ptr))))))
 
 (defun get-int32->string (db key fn)
+  "Returns a value from DB under KEY using FN where the key is a
+32-but integer and the value a string."
   (declare (optimize (speed 3)))
   (declare (type function fn))
   (let ((key-len (foreign-type-size :int32)))
@@ -392,6 +450,8 @@ null-terminated."
                                   :count (mem-ref size-ptr :int)))))))
 
 (defun get-int32->octets (db key fn)
+  "Returns a value from DB under KEY using FN where the key is a
+32-bit integer and the value an octet vector."
   (declare (optimize (speed 3)))
   (declare (type function fn))
   (let ((key-len (foreign-type-size :int32))
@@ -408,14 +468,17 @@ null-terminated."
         (foreign-free value-ptr)))))
 
 (defun put-string->string (db key value fn)
+  "Inserts VALUE into DB under KEY using FN where the key and value
+are strings."
   (declare (optimize (speed 3)))
   (declare (type function fn))
   (or (funcall fn (ptr-of db) key value)
       (maybe-raise-error db "(key ~a) (value ~a)" key value)))
 
 (defun put-string->octets (db key value fn)
-  "Note that for the key we allocate a foreign string that is not
-null-terminated."
+  "Inserts VALUE into DB under KEY using FN where the key is a string
+and the value an octet vector. Note that for the key we allocate a
+foreign string that is not null-terminated."
   (declare (optimize (speed 3)))
   (declare (type (simple-array (unsigned-byte 8)) value)
            (type function fn))
@@ -429,6 +492,8 @@ null-terminated."
             (maybe-raise-error db "(key ~a) (value ~a)" key value))))))
 
 (defun put-octets->octets (db key value fn)
+  "Inserts VALUE into DB under KEY using FN where the key and value
+are octet vectors."
   (declare (optimize (speed 3)))
   (declare (type (simple-array (unsigned-byte 8)) key value)
            (type function fn))
@@ -446,6 +511,8 @@ null-terminated."
             (maybe-raise-error db "(key ~a) (value ~a)" key value))))))
 
 (defun put-int32->string (db key value fn)
+  "Inserts VALUE into DB under KEY using FN where the key is a 32-bit
+integer and the value is a string."
   (declare (optimize (speed 3)))
   (declare (type simple-string value)
            (type function fn))
@@ -458,6 +525,8 @@ null-terminated."
             (maybe-raise-error db "(key ~a) (value ~a)" key value))))))
 
 (defun put-int32->octets (db key value fn)
+  "Inserts VALUE into DB under KEY using FN where the key is a 32-bit
+integer and the value is an octet vector."
   (declare (optimize (speed 3)))
   (declare (type (simple-array (unsigned-byte 8)) value)
            (type function fn))
@@ -473,12 +542,16 @@ null-terminated."
         (maybe-raise-error db "(key ~a) (value ~a)" key value)))))
 
 (defun rem-string->value (db key fn)
+  "Removes value from DB under KEY using FN where the key is a
+string."
   (declare (optimize (speed 3)))
   (declare (type function fn))
   (or (funcall fn (ptr-of db) key)
       (maybe-raise-error db "(key ~a)" key)))
 
 (defun rem-string->duplicates (db key fn)
+  "Removes all values from DB under KEY using FN where the key is a
+string."
   (declare (optimize (speed 3)))
   (declare (type function fn))
   (with-foreign-string ((key-ptr key-len) key :null-terminated-p nil)
@@ -486,6 +559,8 @@ null-terminated."
         (maybe-raise-error db "(key ~a)" key))))
 
 (defun rem-int32->value (db key fn)
+  "Removes value from DB under KEY using FN where the key is a 32-bit
+integer."
   (declare (optimize (speed 3)))
   (declare (type function fn))
   (with-foreign-object (key-ptr :int32)
@@ -493,6 +568,7 @@ null-terminated."
     (or (funcall fn (ptr-of db) key-ptr (foreign-type-size :int32))
         (maybe-raise-error db "(key ~a)" key))))
 
+(declaim (inline copy-foreign-value))
 (defun copy-foreign-value (value-ptr size-ptr)
   (declare (optimize (speed 3)))
   (let ((size (mem-ref size-ptr :int)))
