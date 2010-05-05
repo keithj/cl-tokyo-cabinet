@@ -40,7 +40,8 @@
 
 (defsystem cl-tokyo-cabinet-test
     :depends-on (:cl-tokyo-cabinet
-                 :deoxybyte-io
+                 (:version :deoxybyte-utilities "0.6.0")
+                 (:version :deoxybyte-io "0.6.0")
                  (:version :lift "1.7.0"))
     :components ((:module :cl-tokyo-cabinet-test
                           :serial t

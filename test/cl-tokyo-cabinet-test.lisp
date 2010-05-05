@@ -49,7 +49,7 @@
 
 (deftestsuite bdb-empty-tests (bdb-tests)
   ((db (make-instance 'tc-bdb))
-   (bdb-filespec (namestring (dxi:make-tmp-pathname
+   (bdb-filespec (namestring (dxi:tmp-pathname
                               :basename "bdb" :type "db"
                               :tmpdir (merge-pathnames "data")))))
   (:setup (dbm-open db bdb-filespec :write :create))
@@ -58,7 +58,7 @@
 
 (deftestsuite bdb-100-tests (bdb-tests)
   ((db (make-instance 'tc-bdb))
-   (bdb-filespec (namestring (dxi:make-tmp-pathname
+   (bdb-filespec (namestring (dxi:tmp-pathname
                               :basename "bdb" :type "db"
                               :tmpdir (merge-pathnames "data")))))
   (:setup (dbm-open db bdb-filespec :write :create)
@@ -70,7 +70,7 @@
 
 (deftestsuite hdb-empty-tests (hdb-tests)
   ((db (make-instance 'tc-hdb))
-   (hdb-filespec (namestring (dxi:make-tmp-pathname
+   (hdb-filespec (namestring (dxi:tmp-pathname
                               :basename "hdb" :type "db"
                               :tmpdir (merge-pathnames "data")))))
   (:setup (dbm-open db hdb-filespec :write :create))
@@ -79,7 +79,7 @@
 
 (deftestsuite hdb-100-tests (hdb-tests)
   ((db (make-instance 'tc-hdb))
-   (hdb-filespec (namestring (dxi:make-tmp-pathname
+   (hdb-filespec (namestring (dxi:tmp-pathname
                               :basename "hdb" :type "db"
                               :tmpdir (merge-pathnames "data")))))
   (:setup (dbm-open db hdb-filespec :write :create)

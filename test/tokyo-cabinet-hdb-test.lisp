@@ -38,6 +38,10 @@
 
 (in-package :cl-tokyo-cabinet-test)
 
+(defun hdb-test-file (&optional (basename "hdb") (dir "data"))
+  (namestring (dxi:tmp-pathname :basename basename :type "db"
+                                :tmpdir (merge-pathnames dir))))
+
 (addtest (hdb-tests) new-hdb/1
   (let ((db (make-instance 'tc-hdb)))
     (ensure (cffi:pointerp (tc::ptr-of db)))
@@ -54,9 +58,7 @@
 
 (addtest (hdb-tests) dbm-open/hdb/1
   (let ((db (make-instance 'tc-hdb))
-        (hdb-filespec (namestring (dxi:make-tmp-pathname
-                                   :basename "hdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
+        (hdb-filespec (hdb-test-file)))
     ;; Can't create a new DB in read-only mode
     (ensure-condition dbm-error
       (dbm-open db hdb-filespec :read :create))
@@ -141,9 +143,7 @@
              always (string= (dbm-get db i) value))))
 
 (addtest (hdb-tests) with-database/hdb/1
-  (let ((hdb-filespec (namestring (dxi:make-tmp-pathname
-                                   :basename "hdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
+  (let ((hdb-filespec (hdb-test-file)))
     (with-database (db hdb-filespec 'tc-hdb :write :create)
        (ensure (dbm-put db "key-one" "value-one"))
        (ensure (string= "value-one" (dbm-get db "key-one"))))
@@ -151,9 +151,7 @@
     (delete-file hdb-filespec)))
 
 (addtest (hdb-tests) with-transaction/hdb/1
-  (let ((hdb-filespec (namestring (dxi:make-tmp-pathname
-                                   :basename "hdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
+  (let ((hdb-filespec (hdb-test-file)))
     (with-database (db hdb-filespec 'tc-hdb :write :create)
       (ensure-error
         (with-transaction (db)

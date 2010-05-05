@@ -38,6 +38,10 @@
 
 (in-package :cl-tokyo-cabinet-test)
 
+(defun bdb-test-file (&optional (basename "bdb") (dir "data"))
+  (namestring (dxi:tmp-pathname :basename basename :type "db"
+                                :tmpdir (merge-pathnames dir))))
+
 (addtest (bdb-tests) new-bdb/1
   (let ((db (make-instance 'tc-bdb)))
     (ensure (cffi:pointerp (tc::ptr-of db)))
@@ -54,9 +58,7 @@
 
 (addtest (bdb-tests) dbm-open/bdb/1
   (let ((db (make-instance 'tc-bdb))
-        (bdb-filespec (namestring (dxi:make-tmp-pathname
-                                   :basename "bdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
+        (bdb-filespec (bdb-test-file)))
     ;; Can't create a new DB in read-only mode
     (ensure-condition dbm-error
       (dbm-open db bdb-filespec :read :create))
@@ -121,9 +123,7 @@
 
 (addtest (bdb-tests) dbm-put/bdb/int32/octets/1
   (let ((db (make-instance 'tc-bdb))
-        (bdb-filespec (namestring (dxi:make-tmp-pathname
-                                   :basename "bdb" :type "db"
-                                   :tmpdir (merge-pathnames "data"))))
+        (bdb-filespec (bdb-test-file))
         (octets (make-array 10 :element-type '(unsigned-byte 8)
                             :initial-contents (loop
                                                  for c across "abcdefghij"
@@ -138,9 +138,7 @@
 
 (addtest (bdb-tests) dbm-put/bdb/int32/string/1
   (let ((db (make-instance 'tc-bdb))
-        (bdb-filespec (namestring (dxi:make-tmp-pathname
-                                   :basename "bdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
+        (bdb-filespec (bdb-test-file)))
     (ensure (set-comparator db :int32))
     (ensure (dbm-open db bdb-filespec :write :create))
     ;; Add one
@@ -160,9 +158,7 @@
 
 (addtest (bdb-tests) dbm-get/bdb/int32/string/1
   (let ((db (make-instance 'tc-bdb))
-        (bdb-filespec (namestring (dxi:make-tmp-pathname
-                                   :basename "bdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
+        (bdb-filespec (bdb-test-file)))
     (ensure (set-comparator db :int32))
     (ensure (dbm-open db bdb-filespec :write :create))
     (loop
@@ -177,9 +173,7 @@
 
 (addtest (bdb-tests) dbm-iter/bdb/int32/string/1
   (let ((db (make-instance 'tc-bdb))
-        (bdb-filespec (namestring (dxi:make-tmp-pathname
-                                   :basename "bdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
+        (bdb-filespec (bdb-test-file)))
     (ensure (set-comparator db :int32))
     (ensure (dbm-open db bdb-filespec :write :create))
     (loop
@@ -199,9 +193,7 @@
     (delete-file bdb-filespec)))
 
 (addtest (bdb-tests) with-database/bdb/1
-  (let ((bdb-filespec (namestring (dxi:make-tmp-pathname
-                                   :basename "bdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
+  (let ((bdb-filespec (bdb-test-file)))
     (with-database (db bdb-filespec 'tc-bdb :write :create)
        (ensure (dbm-put db "key-one" "value-one"))
        (ensure (string= "value-one" (dbm-get db "key-one"))))
@@ -209,9 +201,7 @@
     (delete-file bdb-filespec)))
 
 (addtest (bdb-tests) with-transaction/bdb/1
-  (let ((bdb-filespec (namestring (dxi:make-tmp-pathname
-                                   :basename "bdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
+  (let ((bdb-filespec (bdb-test-file)))
     (with-database (db bdb-filespec 'tc-bdb :write :create)
       (ensure-error
         (with-transaction (db)
@@ -221,9 +211,7 @@
     (delete-file bdb-filespec)))
 
 (addtest (bdb-tests) with-iterator/bdb/1
-  (let ((bdb-filespec (namestring (dxi:make-tmp-pathname
-                                   :basename "bdb" :type "db"
-                                   :tmpdir (merge-pathnames "data")))))
+  (let ((bdb-filespec (bdb-test-file)))
     (with-database (db bdb-filespec 'tc-bdb :write :create)
       (let ((data (loop
                      for i from 0 below 10
