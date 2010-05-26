@@ -364,19 +364,17 @@ occurs, the transaction will rollback, otherwise it will commit."
     `(let ((,success nil))
        (flet ((atomic-op ()
                 ,@body))
-         (cond (*in-transaction-p*
-                (atomic-op))
-               (t
-                (unwind-protect
-                     (let ((*in-transaction-p* t))
-                       (prog2
-                           (dbm-begin ,db)
-                           (atomic-op)
-                         (setf ,success t)))
-                  (cond (,success
-                         (dbm-commit ,db))
-                        (t
-                         (dbm-abort ,db))))))))))
+         (if *in-transaction-p*
+             (atomic-op)
+           (unwind-protect
+                (let ((*in-transaction-p* t))
+                  (prog2
+                      (dbm-begin ,db)
+                      (atomic-op)
+                    (setf ,success t)))
+             (if ,success
+                 (dbm-commit ,db)
+               (dbm-abort ,db))))))))
 
 (defmacro with-iterator ((var db) &body body)
   "Evaluates BODY on with VAR bound to a new, open iterator on DB."
