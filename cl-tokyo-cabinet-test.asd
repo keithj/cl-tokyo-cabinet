@@ -36,8 +36,6 @@
 ;;; SUCH DAMAGE.
 ;;;
 
-(in-package :cl-tokyo-cabinet-system)
-
 (defsystem cl-tokyo-cabinet-test
     :depends-on (:cl-tokyo-cabinet
                  (:version :deoxybyte-utilities "0.6.0")

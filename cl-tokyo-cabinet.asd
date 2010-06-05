@@ -38,15 +38,9 @@
 
 (in-package :cl-user)
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (when (asdf:find-system :deoxybyte-systems nil)
-    (asdf:operate 'asdf:load-op :deoxybyte-systems)))
+(asdf:load-system :deoxybyte-systems)
 
-(defpackage :cl-tokyo-cabinet-system
-  (:use :common-lisp :asdf)
-  (:import-from :deoxybyte-systems :lift-test-config :cldoc-config))
-
-(in-package :cl-tokyo-cabinet-system)
+(in-package :uk.co.deoxybyte-systems)
 
 (defsystem cl-tokyo-cabinet
     :name "Common Lisp Tokyo Cabinet"
@@ -73,5 +67,5 @@
                                                "tokyo-cabinet-ffi"
                                                "tokyo-cabinet"))))
                  (:lift-test-config :lift-tests
-                                    :pathname "cl-tokyo-cabinet-test.config"
+                                    :pathname "cl-tokyo-cabinet-test"
                                     :target-system :cl-tokyo-cabinet)))
