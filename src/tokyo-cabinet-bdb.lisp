@@ -105,9 +105,22 @@
     (:string (get-int32->string db key #'tcbdbget))
     (:octets (get-int32->octets db key #'tcbdbget))))
 
+;; KTR
+(defmethod dbm-get ((db tc-bdb) (key vector) &optional (type :string))
+  (ecase type
+    (:string (get-octets->string db key #'tcbdbget))
+    (:octets (get-octets->octets db key #'tcbdbget))))
+;; KTR
+
 (defmethod dbm-put ((db tc-bdb) (key vector) (value vector)
                     &key (mode :replace))
   (put-octets->octets db key value (%bdb-put-fn mode)))
+
+;; KTR
+(defmethod dbm-put ((db tc-bdb) (key vector) (value string)
+                    &key (mode :replace))
+  (put-octets->string db key value (%bdb-put-fn mode)))
+;; KTR
 
 (defmethod dbm-put ((db tc-bdb) (key string) (value string) 
                     &key (mode :replace))
@@ -135,6 +148,13 @@
       (rem-int32->value db key #'tcbdbout3)
     (rem-int32->value db key #'tcbdbout)))
 
+;; KTR
+(defmethod dbm-rem ((db tc-bdb) (key vector) &key remove-dups)
+  (if remove-dups
+      (rem-octets->value db key #'tcbdbout3)
+    (rem-octets->value db key #'tcbdbout)))
+;; KTR
+
 (defmethod iter-open ((db tc-bdb))
   (make-instance 'bdb-iterator :ptr (tcbdbcurnew (ptr-of db))))
 
@@ -161,6 +181,17 @@
   (with-foreign-object (key-ptr :int32)
       (setf (mem-ref key-ptr :int32) key)
       (tcbdbcurjump (ptr-of iter) key-ptr (foreign-type-size :int32))))
+
+;; KTR
+(defmethod iter-jump ((iter bdb-iterator) (key vector))
+  (declare (type (vector (unsigned-byte 8)) key))
+  (let ((key-len (length key)))
+    (with-foreign-object (key-ptr :unsigned-char key-len)
+      (loop
+	 for i from 0 below key-len
+	 do (setf (mem-aref key-ptr :unsigned-char i) (aref key i)))
+      (tcbdbcurjump (ptr-of iter) key-ptr key-len))))
+;; KTR
 
 (defmethod iter-get ((iter bdb-iterator) &optional (type :string))
   (let ((value-ptr nil))
@@ -220,6 +251,7 @@
                  free-pool opts))
 
 (defmethod dbm-cache ((db tc-bdb) &key (leaf 1024) (non-leaf 512))
+  "FIXME: Need to convert leaf and non-leaf to SAPs.  -KTR"
   (tcbdbsetcache (ptr-of db) leaf non-leaf))
 
 (defmethod dbm-xmsize ((db tc-bdb) (size integer))

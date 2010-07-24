@@ -431,6 +431,45 @@ allocate a foreign string that is not null-terminated."
             (maybe-raise-error db "(key ~a)" key)
           (copy-foreign-value value-ptr size-ptr))))))
 
+;; KTR
+(defun get-octets->octets (db key fn)
+  "Returns a value from DB under KEY using FN where the key and value
+are octet vectors."
+  (declare (optimize (speed 3)))
+  (declare (type (simple-array (unsigned-byte 8)) key)
+           (type function fn))
+  (let ((key-len (length key)))
+    (with-foreign-object (key-ptr :unsigned-char key-len)
+      (loop
+	 for i from 0 below key-len
+	 do (setf (mem-aref key-ptr :unsigned-char i) (aref key i)))
+      (with-foreign-object (size-ptr :int)
+	(with-string-value (value-ptr (funcall fn (ptr-of db)
+					       key-ptr key-len size-ptr))
+	  (if (null-pointer-p value-ptr)
+	      (maybe-raise-error db "(key ~a)" key)
+	      (copy-foreign-value value-ptr size-ptr)))))))
+
+(defun get-octets->string (db key fn)
+  "Returns a value from DB under KEY using FN where the key is a vector of octets and value
+is a string."
+  (declare (optimize (speed 3)))
+  (declare (type (simple-array (unsigned-byte 8)) key)
+           (type function fn))
+  (let ((key-len (length key)))
+    (with-foreign-object (key-ptr :unsigned-char key-len)
+      (loop
+	 for i from 0 below key-len
+	 do (setf (mem-aref key-ptr :unsigned-char i) (aref key i)))
+      (with-foreign-object (size-ptr :int)
+	(with-string-value (value-ptr (funcall fn (ptr-of db)
+					       key-ptr key-len size-ptr))
+	  (if (null-pointer-p value-ptr)
+	      (maybe-raise-error db "(key ~a)" key)
+	      (foreign-string-to-lisp value-ptr
+				      :count (mem-ref size-ptr :int))))))))
+;; KTR
+
 (defun get-int32->string (db key fn)
   "Returns a value from DB under KEY using FN where the key is a
 32-but integer and the value a string."
@@ -489,6 +528,23 @@ foreign string that is not null-terminated."
         (or (funcall fn (ptr-of db) key-ptr key-len value-ptr value-len)
             (maybe-raise-error db "(key ~a) (value ~a)" key value))))))
 
+;; KTR
+(defun put-octets->string (db key value fn)
+  "Inserts VALUE into DB under KEY using FN where the key and value
+are octet vectors."
+  (declare (optimize (speed 3)))
+  (declare (type (simple-array (unsigned-byte 8)) key)
+           (type function fn))
+  (let ((key-len (length key)))
+    (with-foreign-object (key-ptr :unsigned-char key-len)
+      (with-foreign-string ((value-ptr value-len) value :null-terminated-p nil)
+	(loop
+	   for i from 0 below key-len
+	   do (setf (mem-aref key-ptr :unsigned-char i) (aref key i)))
+	(or (funcall fn (ptr-of db) key-ptr key-len value-ptr value-len)
+	    (maybe-raise-error db "(key ~a) (value ~a)" key value))))))
+;; KTR
+    
 (defun put-octets->octets (db key value fn)
   "Inserts VALUE into DB under KEY using FN where the key and value
 are octet vectors."
@@ -565,6 +621,21 @@ integer."
     (setf (mem-ref key-ptr :int32) key)
     (or (funcall fn (ptr-of db) key-ptr (foreign-type-size :int32))
         (maybe-raise-error db "(key ~a)" key))))
+
+;; KTR
+(defun rem-octets->value (db key fn)
+  "Removes value from DB under KEY using FN where the key is a vector of octets."
+  (declare (optimize (speed 3)))
+  (declare (type function fn))
+  (declare (type (vector (unsigned-byte 8)) key))
+  (let ((key-len (length key)))
+    (with-foreign-object (key-ptr :unsigned-char key-len)
+      (loop
+	 for i from 0 below key-len
+	 do (setf (mem-aref key-ptr :unsigned-char i) (aref key i)))
+      (or (funcall fn (ptr-of db) key-ptr key-len)
+	  (maybe-raise-error db "(key ~a)" key)))))
+;; KTR
 
 (declaim (inline copy-foreign-value))
 (defun copy-foreign-value (value-ptr size-ptr)
