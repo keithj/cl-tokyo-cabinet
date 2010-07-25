@@ -101,9 +101,18 @@
     (:string (get-int32->string db key #'tchdbget))
     (:octets (get-int32->octets db key #'tchdbget))))
 
+(defmethod dbm-get ((db tc-hdb) (key vector) &optional (type :string))
+  (ecase type
+    (:string (get-octets->string db key #'tchdbget))
+    (:octets (get-octets->octets db key #'tchdbget))))
+
 (defmethod dbm-put ((db tc-hdb) (key vector) (value vector)
                     &key (mode :replace))
   (put-octets->octets db key value (%hdb-put-fn mode)))
+
+(defmethod dbm-put ((db tc-hdb) (key vector) (value string)
+                    &key (mode :replace))
+  (put-octets->string db key value (%hdb-put-fn mode)))
 
 (defmethod dbm-put ((db tc-hdb) (key string) (value string)
                     &key (mode :replace))
