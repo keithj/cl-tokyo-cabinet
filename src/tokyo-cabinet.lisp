@@ -451,8 +451,8 @@ are octet vectors."
 	      (copy-foreign-value value-ptr size-ptr)))))))
 
 (defun get-octets->string (db key fn)
-  "Returns a value from DB under KEY using FN where the key is a vector of octets and value
-is a string."
+  "Returns a value from DB under KEY using FN where the key is a
+vector of octets and value is a string."
   (declare (optimize (speed 3)))
   (declare (type (simple-array (unsigned-byte 8)) key)
            (type function fn))
@@ -624,7 +624,8 @@ integer."
 
 ;; KTR
 (defun rem-octets->value (db key fn)
-  "Removes value from DB under KEY using FN where the key is a vector of octets."
+  "Removes value from DB under KEY using FN where the key is a vector
+of octets."
   (declare (optimize (speed 3)))
   (declare (type function fn))
   (declare (type (vector (unsigned-byte 8)) key))
