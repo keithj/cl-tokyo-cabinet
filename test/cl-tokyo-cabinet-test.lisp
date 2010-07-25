@@ -89,3 +89,7 @@
              do (dbm-put db (format nil "key-~a" i) (format nil "value-~a" i))))
   (:teardown (dbm-close db)
              (delete-file hdb-filespec)))
+
+(defun string-as-octets (str)
+  (map-into (make-array (length str) :element-type '(unsigned-byte 8))
+            #'char-code str))

@@ -95,6 +95,13 @@
              always (string= (dxu:make-sb-string
                               (dbm-get db key :octets)) value))))
 
+(addtest (bdb-100-tests) dbm-get/bdb/octets/octets/1
+  (ensure (loop
+             for i from 0 below 100
+             for key = (string-as-octets (format nil "key-~a" i))
+             for value = (string-as-octets (format nil "value-~a" i))
+             always (equalp (dbm-get db key :octets) value))))
+
 (addtest (bdb-100-tests) dbm-get/bdb/string/bad-type/1
   (ensure-error
     (dbm-get db "key-0" :bad-type)))
@@ -114,28 +121,20 @@
   (ensure (string= "VALUE-TWOVALUE-THREE" (dbm-get db "key-one"))))
 
 (addtest (bdb-empty-tests) dbm-put/bdb/string/octets/1
-  (let ((octets (make-array 10 :element-type '(unsigned-byte 8)
-                            :initial-contents (loop
-                                                 for c across "abcdefghij"
-                                                 collect (char-code c)))))
+  (let ((octets (string-as-octets "abcdefghij")))
     (ensure (dbm-put db "key-one" octets))
     (ensure (equalp octets (dbm-get db "key-one" :octets)))))
 
 (addtest (bdb-empty-tests) dbm-put/bdb/octets/string/1
-  (let ((octets (make-array 7 :element-type '(unsigned-byte 8)
-                            :initial-contents (loop
-                                                 for c across "key-one"
-                                                 collect (char-code c)))))
+  (let ((octets (string-as-octets "key-one")))
     (ensure (dbm-put db octets "value-one"))
-    (ensure (equal "value-one" (dbm-get db octets :string)))))
+    (ensure (equal "value-one" (dbm-get db octets :string)))
+    (ensure (equalp (string-as-octets "value-one") (dbm-get db octets :octets)))))
 
 (addtest (bdb-tests) dbm-put/bdb/int32/octets/1
   (let ((db (make-instance 'tc-bdb))
         (bdb-filespec (bdb-test-file))
-        (octets (make-array 10 :element-type '(unsigned-byte 8)
-                            :initial-contents (loop
-                                                 for c across "abcdefghij"
-                                                 collect (char-code c)))))
+        (octets (string-as-octets "abcdefghij")))
     (ensure (set-comparator db :int32))
     (ensure (dbm-open db bdb-filespec :write :create))
     ;; Add one
@@ -209,6 +208,14 @@
     (delete-file bdb-filespec)))
 
 (addtest (bdb-tests) with-transaction/bdb/1
+  (let ((bdb-filespec (bdb-test-file)))
+    (with-database (db bdb-filespec 'tc-bdb :write :create)
+      (with-transaction (db)
+        (ensure (dbm-put db "key-one" "value-one")))
+      (ensure (string= "value-one" (dbm-get db "key-one"))))
+    (delete-file bdb-filespec)))
+
+(addtest (bdb-tests) with-transaction/bdb/2
   (let ((bdb-filespec (bdb-test-file)))
     (with-database (db bdb-filespec 'tc-bdb :write :create)
       (ensure-error

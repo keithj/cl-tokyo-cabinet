@@ -100,6 +100,13 @@
              always (string= (dxu:make-sb-string
                               (dbm-get db key :octets)) value))))
 
+(addtest (hdb-100-tests) dbm-get/bdb/octets/octets/1
+  (ensure (loop
+             for i from 0 below 100
+             for key = (string-as-octets (format nil "key-~a" i))
+             for value = (string-as-octets (format nil "value-~a" i))
+             always (equalp (dbm-get db key :octets) value))))
+
 (addtest (hdb-100-tests) dbm-get/hdb/string/bad-type/1
  (ensure-error
    (dbm-get db "key-0" :bad-type)))
@@ -120,26 +127,18 @@
   (ensure (string= "VALUE-TWOVALUE-THREE" (dbm-get db "key-one"))))
 
 (addtest (hdb-empty-tests) dbm-put/hdb/string/octets/1
-  (let ((octets (make-array 10 :element-type '(unsigned-byte 8)
-                            :initial-contents (loop
-                                                 for c across "abcdefghij"
-                                                 collect (char-code c)))))
+  (let ((octets (string-as-octets "abcdefghij")))
     (ensure (dbm-put db "key-one" octets))
     (ensure (equalp octets (dbm-get db "key-one" :octets)))))
 
 (addtest (hdb-empty-tests) dbm-put/hdb/octets/string/1
-  (let ((octets (make-array 7 :element-type '(unsigned-byte 8)
-                            :initial-contents (loop
-                                                 for c across "key-one"
-                                                 collect (char-code c)))))
+  (let ((octets (string-as-octets "key-one")))
     (ensure (dbm-put db octets "value-one"))
-    (ensure (equal "value-one" (dbm-get db octets :string)))))
+    (ensure (equal "value-one" (dbm-get db octets :string)))
+    (ensure (equalp (string-as-octets "value-one") (dbm-get db octets :octets)))))
 
 (addtest (hdb-empty-tests) dbm-put/hdb/int32/octets/1
-  (let ((octets (make-array 10 :element-type '(unsigned-byte 8)
-                            :initial-contents (loop
-                                                 for c across "abcdefghij"
-                                                 collect (char-code c)))))
+  (let ((octets (string-as-octets "abcdefghij")))
     ;; Add one
     (ensure (dbm-put db 111 octets))
     (ensure (equalp octets (dbm-get db 111 :octets)))))
