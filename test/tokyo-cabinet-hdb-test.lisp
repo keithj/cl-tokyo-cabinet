@@ -119,6 +119,31 @@
   (ensure (dbm-put db "key-one" "VALUE-THREE" :mode :concat))
   (ensure (string= "VALUE-TWOVALUE-THREE" (dbm-get db "key-one"))))
 
+(addtest (hdb-empty-tests) dbm-put/hdb/string/octets/1
+  (let ((octets (make-array 10 :element-type '(unsigned-byte 8)
+                            :initial-contents (loop
+                                                 for c across "abcdefghij"
+                                                 collect (char-code c)))))
+    (ensure (dbm-put db "key-one" octets))
+    (ensure (equalp octets (dbm-get db "key-one" :octets)))))
+
+(addtest (hdb-empty-tests) dbm-put/hdb/octets/string/1
+  (let ((octets (make-array 7 :element-type '(unsigned-byte 8)
+                            :initial-contents (loop
+                                                 for c across "key-one"
+                                                 collect (char-code c)))))
+    (ensure (dbm-put db octets "value-one"))
+    (ensure (equal "value-one" (dbm-get db octets :string)))))
+
+(addtest (hdb-empty-tests) dbm-put/hdb/int32/octets/1
+  (let ((octets (make-array 10 :element-type '(unsigned-byte 8)
+                            :initial-contents (loop
+                                                 for c across "abcdefghij"
+                                                 collect (char-code c)))))
+    ;; Add one
+    (ensure (dbm-put db 111 octets))
+    (ensure (equalp octets (dbm-get db 111 :octets)))))
+
 (addtest (hdb-empty-tests) dbm-put/hdb/int32/string/1
   ;; Add one
   (ensure (dbm-put db 111 "value-one"))

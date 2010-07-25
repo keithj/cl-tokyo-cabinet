@@ -39,7 +39,8 @@
 (in-package :cl-tokyo-cabinet-test)
 
 (deftestsuite cl-tokyo-cabinet-tests ()
-  ())
+  ()
+  (:setup (ensure-directories-exist (merge-pathnames "data/"))))
 
 (deftestsuite bdb-tests (cl-tokyo-cabinet-tests)
   ())

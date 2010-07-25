@@ -121,6 +121,14 @@
     (ensure (dbm-put db "key-one" octets))
     (ensure (equalp octets (dbm-get db "key-one" :octets)))))
 
+(addtest (bdb-empty-tests) dbm-put/bdb/octets/string/1
+  (let ((octets (make-array 7 :element-type '(unsigned-byte 8)
+                            :initial-contents (loop
+                                                 for c across "key-one"
+                                                 collect (char-code c)))))
+    (ensure (dbm-put db octets "value-one"))
+    (ensure (equal "value-one" (dbm-get db octets :string)))))
+
 (addtest (bdb-tests) dbm-put/bdb/int32/octets/1
   (let ((db (make-instance 'tc-bdb))
         (bdb-filespec (bdb-test-file))
