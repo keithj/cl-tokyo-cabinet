@@ -184,7 +184,7 @@
 
 ;; KTR
 (defmethod iter-jump ((iter bdb-iterator) (key vector))
-  (declare (type (vector (unsigned-byte 8)) key))
+  (declare (type (vector octet) key))
   (let ((key-len (length key)))
     (with-foreign-object (key-ptr :unsigned-char key-len)
       (loop
@@ -213,7 +213,7 @@
 
 (defmethod iter-put ((iter bdb-iterator) (value vector)
                      &key (mode :current))
-  (declare (type (vector (unsigned-byte 8)) value))
+  (declare (type (vector octet) value))
   (let ((value-len (length value)))
     (with-foreign-object (value-ptr :unsigned-char value-len)
       (tcbdbcurput (ptr-of iter) value-ptr value-len (%bdb-iter-mode mode)))))

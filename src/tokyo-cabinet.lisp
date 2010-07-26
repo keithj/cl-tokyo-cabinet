@@ -46,6 +46,9 @@
   "The 64bit built-in DBM key type."
   '(signed-byte 64))
 
+(deftype octet ()
+  '(unsigned-byte 8))
+
 (defparameter *in-transaction-p* nil
   "Bound when in a transaction.")
 
@@ -436,7 +439,7 @@ allocate a foreign string that is not null-terminated."
   "Returns a value from DB under KEY using FN where the key and value
 are octet vectors."
   (declare (optimize (speed 3)))
-  (declare (type (simple-array (unsigned-byte 8)) key)
+  (declare (type (simple-array octet) key)
            (type function fn))
   (let ((key-len (length key)))
     (with-foreign-object (key-ptr :unsigned-char key-len)
@@ -454,7 +457,7 @@ are octet vectors."
   "Returns a value from DB under KEY using FN where the key is a
 vector of octets and value is a string."
   (declare (optimize (speed 3)))
-  (declare (type (simple-array (unsigned-byte 8)) key)
+  (declare (type (simple-array octet) key)
            (type function fn))
   (let ((key-len (length key)))
     (with-foreign-object (key-ptr :unsigned-char key-len)
@@ -517,7 +520,7 @@ are strings."
 and the value an octet vector. Note that for the key we allocate a
 foreign string that is not null-terminated."
   (declare (optimize (speed 3)))
-  (declare (type (simple-array (unsigned-byte 8)) value)
+  (declare (type (simple-array octet) value)
            (type function fn))
   (let ((value-len (length value)))
     (with-foreign-string ((key-ptr key-len) key :null-terminated-p nil)
@@ -533,7 +536,7 @@ foreign string that is not null-terminated."
   "Inserts VALUE into DB under KEY using FN where the key and value
 are octet vectors."
   (declare (optimize (speed 3)))
-  (declare (type (simple-array (unsigned-byte 8)) key)
+  (declare (type (simple-array octet) key)
            (type function fn))
   (let ((key-len (length key)))
     (with-foreign-object (key-ptr :unsigned-char key-len)
@@ -549,7 +552,7 @@ are octet vectors."
   "Inserts VALUE into DB under KEY using FN where the key and value
 are octet vectors."
   (declare (optimize (speed 3)))
-  (declare (type (simple-array (unsigned-byte 8)) key value)
+  (declare (type (simple-array octet) key value)
            (type function fn))
   (let ((key-len (length key))
         (value-len (length value)))
@@ -582,7 +585,7 @@ integer and the value is a string."
   "Inserts VALUE into DB under KEY using FN where the key is a 32-bit
 integer and the value is an octet vector."
   (declare (optimize (speed 3)))
-  (declare (type (simple-array (unsigned-byte 8)) value)
+  (declare (type (simple-array octet) value)
            (type function fn))
   (let ((key-len (foreign-type-size :int32))
         (value-len (length value)))
@@ -628,7 +631,7 @@ integer."
 of octets."
   (declare (optimize (speed 3)))
   (declare (type function fn))
-  (declare (type (vector (unsigned-byte 8)) key))
+  (declare (type (vector octet) key))
   (let ((key-len (length key)))
     (with-foreign-object (key-ptr :unsigned-char key-len)
       (loop
@@ -643,7 +646,7 @@ of octets."
   (declare (optimize (speed 3)))
   (let ((size (mem-ref size-ptr :int)))
     (loop
-       with value = (make-array size :element-type '(unsigned-byte 8))
+       with value = (make-array size :element-type 'octet)
        for i from 0 below size
        do (setf (aref value i) (mem-aref value-ptr :unsigned-char i))
        finally (return value))))
