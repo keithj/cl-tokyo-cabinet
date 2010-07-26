@@ -93,3 +93,143 @@
 (defun string-as-octets (str)
   (map-into (make-array (length str) :element-type '(unsigned-byte 8))
             #'char-code str))
+
+;;; Tests shared between DB classes
+(defun test-new-db (class)
+  (let ((db (make-instance class)))
+    (ensure (cffi:pointerp (tc::ptr-of db)))
+    (dbm-delete db)))
+
+(defun test-raise-error (class)
+  (let ((db (make-instance class)))
+    (ensure-condition dbm-error
+      (tc::raise-error db))
+    (ensure-condition dbm-error
+      (tc::raise-error db "no args message"))
+    (ensure-condition dbm-error
+      (tc::raise-error db "message with ~a" ""))))
+
+(defun test-dbm-open (class filespec)
+  (let ((db (make-instance class)))
+    ;; Can't create a new DB in read-only mode
+    (ensure-condition dbm-error
+      (dbm-open db filespec :read :create))
+    (ensure (dbm-open db filespec :write :create))
+    (ensure (fad:file-exists-p filespec))
+    (ensure (delete-file filespec))))
+
+(defun test-dbm-vanish (db)
+  (dbm-vanish db)
+  (ensure (zerop (dbm-num-records db))))
+
+(defun test-dbm-num-records (db n)
+  (ensure (= n (dbm-num-records db)))
+  (dbm-vanish db)
+  (ensure (zerop (dbm-num-records db))))
+
+(defun test-dbm-file-size (db filespec)
+  (with-open-file (stream filespec :direction :input
+                          :element-type '(unsigned-byte 8))
+    (ensure (= (dbm-file-size db)
+               (file-length stream))
+            :report "expected file size ~a but found ~a"
+            :arguments ((dbm-file-size db) (file-length stream)))))
+
+(defun test-dbm-get-string/string (db)
+  (ensure (loop
+             for i from 0 below 100
+             for key = (format nil "key-~a" i)
+             for value = (format nil "value-~a" i)
+             always (string= (dbm-get db key) value))))
+
+(defun test-dbm-get-string/octets (db)
+  (ensure (loop
+             for i from 0 below 100
+             for key = (format nil "key-~a" i)
+             for value = (format nil "value-~a" i)
+             always (string= (dxu:make-sb-string
+                              (dbm-get db key :octets)) value))))
+
+(defun test-dbm-get-octets/octets (db)
+  (ensure (loop
+             for i from 0 below 100
+             for key = (string-as-octets (format nil "key-~a" i))
+             for value = (string-as-octets (format nil "value-~a" i))
+             always (equalp (dbm-get db key :octets) value))))
+
+(defun test-dbm-get-string/bad-type (db)
+  (ensure-error
+    (dbm-get db "key-0" :bad-type)))
+
+(defun test-dbm-put-string/string (db)
+  ;; Add one
+  (ensure (dbm-put db "key-one" "value-one"))
+  (ensure (equal "value-one" (dbm-get db "key-one")))
+  ;; Keep
+  (ensure-condition dbm-error
+    (dbm-put db "key-one" "VALUE-TWO" :mode :keep))
+  (ensure (equal "value-one" (dbm-get db "key-one")))
+  ;; Replace
+  (ensure (dbm-put db "key-one" "VALUE-TWO" :mode :replace))
+  (ensure (equal "VALUE-TWO" (dbm-get db "key-one")))
+  ;; Concat
+  (ensure (dbm-put db "key-one" "VALUE-THREE" :mode :concat))
+  (ensure (equal "VALUE-TWOVALUE-THREE" (dbm-get db "key-one"))))
+
+(defun test-dbm-put-string/octets (db)
+  ;; Add one
+  (ensure (dbm-put db "key-one" (string-as-octets "value-one")))
+  (ensure (equalp (string-as-octets "value-one")
+                  (dbm-get db "key-one" :octets)))
+  ;; Keep
+  (ensure-condition dbm-error
+    (dbm-put db "key-one" (string-as-octets "VALUE-TWO") :mode :keep))
+  (ensure (equalp (string-as-octets "value-one")
+                  (dbm-get db "key-one" :octets)))
+  ;; Replace
+  (ensure (dbm-put db "key-one" (string-as-octets "VALUE-TWO") :mode :replace))
+  (ensure (equalp (string-as-octets "VALUE-TWO")
+                  (dbm-get db "key-one" :octets)))
+  ;; Concat
+  (ensure (dbm-put db "key-one" (string-as-octets "VALUE-THREE") :mode :concat))
+  (ensure (equalp (string-as-octets "VALUE-TWOVALUE-THREE")
+                  (dbm-get db "key-one" :octets))))
+
+(defun test-dbm-put-octets/string (db)
+  (let ((key (string-as-octets "key-one")))
+    ;; Add one
+    (ensure (dbm-put db key "value-one"))
+    (ensure (equal "value-one"  (dbm-get db key)))
+    ;; Keep
+    (ensure-condition dbm-error
+      (dbm-put db key "VALUE-TWO" :mode :keep))
+    (ensure (equal "value-one" (dbm-get db key)))
+    ;; Replace
+    (ensure (dbm-put db key "VALUE-TWO" :mode :replace))
+    (ensure (equal "VALUE-TWO" (dbm-get db key)))
+    ;; Concat
+    (ensure (dbm-put db key "VALUE-THREE" :mode :concat))
+    (ensure (equal "VALUE-TWOVALUE-THREE" (dbm-get db key)))))
+
+(defun test-with-database (class filespec)
+ (with-database (db filespec class :write :create)
+   (ensure (dbm-put db "key-one" "value-one"))
+   (ensure (string= "value-one" (dbm-get db "key-one"))))
+ (ensure (fad:file-exists-p filespec))
+ (delete-file filespec))
+
+(defun test-with-transaction (class filespec)
+  (with-database (db filespec class :write :create)
+    (with-transaction (db)
+      (ensure (dbm-put db "key-one" "value-one")))
+    (ensure (string= "value-one" (dbm-get db "key-one"))))
+  (delete-file filespec))
+
+(defun test-with-transaction-rollback (class filespec)
+  (with-database (db filespec class :write :create)
+    (ensure-error
+      (with-transaction (db)
+        (ensure (dbm-put db "key-one" "value-one"))
+        (error "Test error.")))
+    (ensure-null (dbm-get db "key-one")))
+  (delete-file filespec))

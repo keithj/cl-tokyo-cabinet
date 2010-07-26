@@ -43,99 +43,46 @@
                                 :tmpdir (merge-pathnames dir))))
 
 (addtest (hdb-tests) new-hdb/1
-  (let ((db (make-instance 'tc-hdb)))
-    (ensure (cffi:pointerp (tc::ptr-of db)))
-    (dbm-delete db)))
+  (test-new-db 'tc-hdb))
 
 (addtest (hdb-tests) raise-error/hdb/1
-  (let ((db (make-instance 'tc-bdb)))
-    (ensure-condition dbm-error
-      (tc::raise-error db))
-    (ensure-condition dbm-error
-      (tc::raise-error db "no args message"))
-    (ensure-condition dbm-error
-      (tc::raise-error db "message with ~a" ""))))
+  (test-raise-error 'tc-hdb))
 
 (addtest (hdb-tests) dbm-open/hdb/1
-  (let ((db (make-instance 'tc-hdb))
-        (hdb-filespec (hdb-test-file)))
-    ;; Can't create a new DB in read-only mode
-    (ensure-condition dbm-error
-      (dbm-open db hdb-filespec :read :create))
-    (ensure (dbm-open db hdb-filespec :write :create))
-    (ensure (fad:file-exists-p hdb-filespec))
-    (ensure (delete-file hdb-filespec))))
+  (test-dbm-open 'tc-hdb (hdb-test-file)))
 
 (addtest (hdb-100-tests) hbm-vanish/hdb/1
-  (dbm-vanish db)
-  (ensure (zerop (dbm-num-records db))))
+  (test-dbm-vanish db))
 
 (addtest (hdb-100-tests) dbm-num-records/hdb/1
-  (ensure (= 100 (dbm-num-records db)))
-  (dbm-vanish db)
-  (ensure (zerop (dbm-num-records db))))
+  (test-dbm-num-records db 100))
 
 ;; This fails. I think it's a tc bug. I reported this, or similar, in
 ;; 2008, but the record of it seems to have been deleted from the tc
 ;; site.
 (addtest (hdb-100-tests) dbm-file-size/hdb/1
-  (with-open-file (stream hdb-filespec :direction :input)
-    (ensure (= (dbm-file-size db)
-               (file-length stream))
-            :report "expected file size ~a but found ~a"
-            :arguments ((dbm-file-size db) (file-length stream)))))
+  (test-dbm-file-size db hdb-filespec))
 
-(addtest (hdb-100-tests) dbm-put/get/hdb/string/string/1
- (ensure (loop
-            for i from 0 below 100
-            for key = (format nil "key-~a" i)
-            for value = (format nil "value-~a" i)
-            always (string= (dbm-get db key) value))))
+(addtest (hdb-100-tests) dbm-get/hdb/string/string/1
+  (test-dbm-get-string/string db))
 
 (addtest (hdb-100-tests) dbm-get/hdb/string/octets/1
-  (ensure (loop
-             for i from 0 below 100
-             for key = (format nil "key-~a" i)
-             for value = (format nil "value-~a" i)
-             always (string= (dxu:make-sb-string
-                              (dbm-get db key :octets)) value))))
+  (test-dbm-get-string/octets db))
 
 (addtest (hdb-100-tests) dbm-get/bdb/octets/octets/1
-  (ensure (loop
-             for i from 0 below 100
-             for key = (string-as-octets (format nil "key-~a" i))
-             for value = (string-as-octets (format nil "value-~a" i))
-             always (equalp (dbm-get db key :octets) value))))
+  (test-dbm-get-octets/octets db))
 
 (addtest (hdb-100-tests) dbm-get/hdb/string/bad-type/1
- (ensure-error
-   (dbm-get db "key-0" :bad-type)))
+  (test-dbm-get-string/bad-type db))
 
 (addtest (hdb-empty-tests) dbm-put/hdb/string/string/1
-  ;; Add one
-  (ensure (dbm-put db "key-one" "value-one"))
-  (ensure (string= "value-one" (dbm-get db "key-one")))
-  ;; Keep
-  (ensure-condition dbm-error
-    (dbm-put db "key-one" "VALUE-TWO" :mode :keep))
-  (ensure (string= "value-one" (dbm-get db "key-one")))
-  ;; Replace
-  (ensure (dbm-put db "key-one" "VALUE-TWO" :mode :replace))
-  (ensure (string= "VALUE-TWO" (dbm-get db "key-one")))
-  ;; Concat
-  (ensure (dbm-put db "key-one" "VALUE-THREE" :mode :concat))
-  (ensure (string= "VALUE-TWOVALUE-THREE" (dbm-get db "key-one"))))
+  (test-dbm-put-string/string db))
 
 (addtest (hdb-empty-tests) dbm-put/hdb/string/octets/1
-  (let ((octets (string-as-octets "abcdefghij")))
-    (ensure (dbm-put db "key-one" octets))
-    (ensure (equalp octets (dbm-get db "key-one" :octets)))))
+  (test-dbm-put-string/octets db))
 
 (addtest (hdb-empty-tests) dbm-put/hdb/octets/string/1
-  (let ((octets (string-as-octets "key-one")))
-    (ensure (dbm-put db octets "value-one"))
-    (ensure (equal "value-one" (dbm-get db octets :string)))
-    (ensure (equalp (string-as-octets "value-one") (dbm-get db octets :octets)))))
+  (test-dbm-put-octets/string db))
 
 (addtest (hdb-empty-tests) dbm-put/hdb/int32/octets/1
   (let ((octets (string-as-octets "abcdefghij")))
@@ -167,19 +114,10 @@
              always (string= (dbm-get db i) value))))
 
 (addtest (hdb-tests) with-database/hdb/1
-  (let ((hdb-filespec (hdb-test-file)))
-    (with-database (db hdb-filespec 'tc-hdb :write :create)
-       (ensure (dbm-put db "key-one" "value-one"))
-       (ensure (string= "value-one" (dbm-get db "key-one"))))
-    (ensure (fad:file-exists-p hdb-filespec))
-    (delete-file hdb-filespec)))
+  (test-with-database 'tc-hdb (hdb-test-file)))
 
 (addtest (hdb-tests) with-transaction/hdb/1
-  (let ((hdb-filespec (hdb-test-file)))
-    (with-database (db hdb-filespec 'tc-hdb :write :create)
-      (ensure-error
-        (with-transaction (db)
-          (ensure (dbm-put db "key-one" "value-one"))
-          (error "Test error.")))
-      (ensure-null (dbm-get db "key-one"))) ; should rollback
-    (delete-file hdb-filespec)))
+  (test-with-transaction 'tc-hdb (hdb-test-file)))
+
+(addtest (hdb-tests) with-transaction/hdb/2
+  (test-with-transaction-rollback 'tc-hdb (hdb-test-file)))

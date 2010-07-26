@@ -43,93 +43,43 @@
                                 :tmpdir (merge-pathnames dir))))
 
 (addtest (bdb-tests) new-bdb/1
-  (let ((db (make-instance 'tc-bdb)))
-    (ensure (cffi:pointerp (tc::ptr-of db)))
-    (dbm-delete db)))
+  (test-new-db 'tc-bdb))
 
-(addtest (bdb-tests) raise-error/bdb/1
-  (let ((db (make-instance 'tc-bdb)))
-    (ensure-condition dbm-error
-      (tc::raise-error db))
-    (ensure-condition dbm-error
-      (tc::raise-error db "no args message"))
-    (ensure-condition dbm-error
-      (tc::raise-error db "message with ~a" ""))))
+(addtest (hdb-tests) raise-error/bdb/1
+  (test-raise-error 'tc-bdb))
 
 (addtest (bdb-tests) dbm-open/bdb/1
-  (let ((db (make-instance 'tc-bdb))
-        (bdb-filespec (bdb-test-file)))
-    ;; Can't create a new DB in read-only mode
-    (ensure-condition dbm-error
-      (dbm-open db bdb-filespec :read :create))
-    (ensure (dbm-open db bdb-filespec :write :create))
-    (ensure (fad:file-exists-p bdb-filespec))
-    (ensure (delete-file bdb-filespec))))
+  (test-dbm-open 'tc-bdb (bdb-test-file)))
 
 (addtest (bdb-100-tests) dbm-vanish/bdb/1
-  (dbm-vanish db)
-  (ensure (zerop (dbm-num-records db))))
+  (test-dbm-vanish db))
 
 (addtest (bdb-100-tests) dbm-num-records/bdb/1
-  (ensure (= 100 (dbm-num-records db)))
-  (dbm-vanish db)
-  (ensure (zerop (dbm-num-records db))))
+  (test-dbm-num-records db 100))
 
 (addtest (bdb-100-tests) dbm-file-size/bdb/1
-  (with-open-file (stream bdb-filespec :direction :input)
-    (ensure (= (dbm-file-size db)
-               (file-length stream)))))
+  (test-dbm-file-size db bdb-filespec))
 
 (addtest (bdb-100-tests) dbm-get/bdb/string/string/1
-  (ensure (loop
-             for i from 0 below 100
-             for key = (format nil "key-~a" i)
-             for value = (format nil "value-~a" i)
-             always (string= (dbm-get db key) value))))
+  (test-dbm-get-string/string db))
 
 (addtest (bdb-100-tests) dbm-get/bdb/string/octets/1
-  (ensure (loop
-             for i from 0 below 100
-             for key = (format nil "key-~a" i)
-             for value = (format nil "value-~a" i)
-             always (string= (dxu:make-sb-string
-                              (dbm-get db key :octets)) value))))
+  (test-dbm-get-string/octets db))
 
 (addtest (bdb-100-tests) dbm-get/bdb/octets/octets/1
-  (ensure (loop
-             for i from 0 below 100
-             for key = (string-as-octets (format nil "key-~a" i))
-             for value = (string-as-octets (format nil "value-~a" i))
-             always (equalp (dbm-get db key :octets) value))))
+  (test-dbm-get-octets/octets db))
 
 (addtest (bdb-100-tests) dbm-get/bdb/string/bad-type/1
-  (ensure-error
-    (dbm-get db "key-0" :bad-type)))
+  (test-dbm-get-string/bad-type db))
 
 (addtest (bdb-empty-tests) dbm-put/bdb/string/string/1
-  ;; Add one
-  (ensure (dbm-put db "key-one" "value-one"))
-  (ensure (string= "value-one" (dbm-get db "key-one")))
-  ;; Keep
-  (ensure-condition dbm-error
-    (dbm-put db "key-one" "VALUE-TWO" :mode :keep))
-  ;; Replace
-  (ensure (dbm-put db "key-one" "VALUE-TWO" :mode :replace))
-  (ensure (string= "VALUE-TWO" (dbm-get db "key-one")))
-  ;; Concat
-  (ensure (dbm-put db "key-one" "VALUE-THREE" :mode :concat))
-  (ensure (string= "VALUE-TWOVALUE-THREE" (dbm-get db "key-one"))))
+  (test-dbm-put-string/string db))
 
 (addtest (bdb-empty-tests) dbm-put/bdb/string/octets/1
-  (let ((octets (string-as-octets "abcdefghij")))
-    (ensure (dbm-put db "key-one" octets))
-    (ensure (equalp octets (dbm-get db "key-one" :octets)))))
+  (test-dbm-put-string/octets db))
 
 (addtest (bdb-empty-tests) dbm-put/bdb/octets/string/1
-  (let ((octets (string-as-octets "key-one")))
-    (ensure (dbm-put db octets "value-one"))
-    (ensure (equal "value-one" (dbm-get db octets :string)))
-    (ensure (equalp (string-as-octets "value-one") (dbm-get db octets :octets)))))
+  (test-dbm-put-octets/string db))
 
 (addtest (bdb-tests) dbm-put/bdb/int32/octets/1
   (let ((db (make-instance 'tc-bdb))
@@ -200,30 +150,13 @@
     (delete-file bdb-filespec)))
 
 (addtest (bdb-tests) with-database/bdb/1
-  (let ((bdb-filespec (bdb-test-file)))
-    (with-database (db bdb-filespec 'tc-bdb :write :create)
-       (ensure (dbm-put db "key-one" "value-one"))
-       (ensure (string= "value-one" (dbm-get db "key-one"))))
-    (ensure (fad:file-exists-p bdb-filespec))
-    (delete-file bdb-filespec)))
+  (test-with-database 'tc-bdb (bdb-test-file)))
 
 (addtest (bdb-tests) with-transaction/bdb/1
-  (let ((bdb-filespec (bdb-test-file)))
-    (with-database (db bdb-filespec 'tc-bdb :write :create)
-      (with-transaction (db)
-        (ensure (dbm-put db "key-one" "value-one")))
-      (ensure (string= "value-one" (dbm-get db "key-one"))))
-    (delete-file bdb-filespec)))
+  (test-with-transaction 'tc-bdb (bdb-test-file)))
 
 (addtest (bdb-tests) with-transaction/bdb/2
-  (let ((bdb-filespec (bdb-test-file)))
-    (with-database (db bdb-filespec 'tc-bdb :write :create)
-      (ensure-error
-        (with-transaction (db)
-          (ensure (dbm-put db "key-one" "value-one"))
-          (error "Test error.")))
-      (ensure-null (dbm-get db "key-one"))) ; should rollback
-    (delete-file bdb-filespec)))
+  (test-with-transaction-rollback 'tc-bdb (bdb-test-file)))
 
 (addtest (bdb-tests) with-iterator/bdb/1
   (let ((bdb-filespec (bdb-test-file)))
