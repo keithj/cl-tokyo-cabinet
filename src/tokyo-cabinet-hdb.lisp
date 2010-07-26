@@ -141,7 +141,7 @@
 (defmethod iter-open ((db tc-hdb))
   (if (tchdbiterinit (ptr-of db))
       (make-instance 'hdb-iterator :ptr (ptr-of db))
-    (raise-error db)))
+      (raise-error db)))
 
 (defmethod iter-close ((iter hdb-iterator))
   t)

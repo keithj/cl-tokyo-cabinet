@@ -141,18 +141,18 @@
 (defmethod dbm-rem ((db tc-bdb) (key string) &key remove-dups)
   (if remove-dups
       (rem-string->duplicates db key #'tcbdbout3)
-    (rem-string->value db key #'tcbdbout2)))
+      (rem-string->value db key #'tcbdbout2)))
 
 (defmethod dbm-rem ((db tc-bdb) (key integer) &key remove-dups)
   (if remove-dups
       (rem-int32->value db key #'tcbdbout3)
-    (rem-int32->value db key #'tcbdbout)))
+      (rem-int32->value db key #'tcbdbout)))
 
 ;; KTR
 (defmethod dbm-rem ((db tc-bdb) (key vector) &key remove-dups)
   (if remove-dups
       (rem-octets->value db key #'tcbdbout3)
-    (rem-octets->value db key #'tcbdbout)))
+      (rem-octets->value db key #'tcbdbout)))
 ;; KTR
 
 (defmethod iter-open ((db tc-bdb))
@@ -251,7 +251,6 @@
                  free-pool opts))
 
 (defmethod dbm-cache ((db tc-bdb) &key (leaf 1024) (non-leaf 512))
-  "FIXME: Need to convert leaf and non-leaf to SAPs.  -KTR"
   (tcbdbsetcache (ptr-of db) leaf non-leaf))
 
 (defmethod dbm-xmsize ((db tc-bdb) (size integer))
