@@ -134,8 +134,8 @@
 
 (defcfun ("tcbdbsetcache" tcbdbsetcache) :pointer
   (bdb :pointer)
-  (lcnum :pointer)
-  (ncnum :pointer))
+  (lcnum :int32)
+  (ncnum :int32))
 
 (defcfun ("tcbdbsetxmsiz" tcbdbsetxmsiz) :boolean
   (bdb :pointer)
