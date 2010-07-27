@@ -533,8 +533,8 @@ foreign string that is not null-terminated."
 
 ;; KTR
 (defun put-octets->string (db key value fn)
-  "Inserts VALUE into DB under KEY using FN where the key and value
-are octet vectors."
+  "Inserts VALUE into DB under KEY using FN where the key is an octet vector
+and the value is a string."
   (declare (optimize (speed 3)))
   (declare (type (simple-array octet) key)
            (type function fn))
