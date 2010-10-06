@@ -85,7 +85,7 @@
   (test-dbm-put-octets/string db))
 
 (addtest (hdb-empty-tests) dbm-put/hdb/int32/octets/1
-  (let ((octets (string-as-octets "abcdefghij")))
+  (let ((octets (dxu:string-to-octets "abcdefghij")))
     ;; Add one
     (ensure (dbm-put db 111 octets))
     (ensure (equalp octets (dbm-get db 111 :octets)))))

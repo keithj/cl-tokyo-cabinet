@@ -635,8 +635,8 @@ of octets."
   (let ((key-len (length key)))
     (with-foreign-object (key-ptr :unsigned-char key-len)
       (loop
-	 for i from 0 below key-len
-	 do (setf (mem-aref key-ptr :unsigned-char i) (aref key i)))
+         for i from 0 below key-len
+         do (setf (mem-aref key-ptr :unsigned-char i) (aref key i)))
       (or (funcall fn (ptr-of db) key-ptr key-len)
 	  (maybe-raise-error db "(key ~a)" key)))))
 ;; KTR

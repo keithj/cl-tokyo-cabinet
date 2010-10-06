@@ -84,7 +84,7 @@
 (addtest (bdb-tests) dbm-put/bdb/int32/octets/1
   (let ((db (make-instance 'tc-bdb))
         (bdb-filespec (bdb-test-file))
-        (octets (string-as-octets "abcdefghij")))
+        (octets (dxu:string-to-octets "abcdefghij")))
     (ensure (set-comparator db :int32))
     (ensure (dbm-open db bdb-filespec :write :create))
     ;; Add one

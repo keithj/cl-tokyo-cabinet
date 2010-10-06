@@ -90,10 +90,6 @@
   (:teardown (dbm-close db)
              (delete-file hdb-filespec)))
 
-(defun string-as-octets (str)
-  (map-into (make-array (length str) :element-type '(unsigned-byte 8))
-            #'char-code str))
-
 ;;; Tests shared between DB classes
 (defun test-new-db (class)
   (let ((db (make-instance class)))
@@ -147,14 +143,14 @@
              for i from 0 below 100
              for key = (format nil "key-~a" i)
              for value = (format nil "value-~a" i)
-             always (string= (dxu:make-sb-string
+             always (string= (dxu:octets-to-string
                               (dbm-get db key :octets)) value))))
 
 (defun test-dbm-get-octets/octets (db)
   (ensure (loop
              for i from 0 below 100
-             for key = (string-as-octets (format nil "key-~a" i))
-             for value = (string-as-octets (format nil "value-~a" i))
+             for key = (dxu:string-to-octets (format nil "key-~a" i))
+             for value = (dxu:string-to-octets (format nil "value-~a" i))
              always (equalp (dbm-get db key :octets) value))))
 
 (defun test-dbm-get-string/bad-type (db)
@@ -178,25 +174,27 @@
 
 (defun test-dbm-put-string/octets (db)
   ;; Add one
-  (ensure (dbm-put db "key-one" (string-as-octets "value-one")))
-  (ensure (equalp (string-as-octets "value-one")
+  (ensure (dbm-put db "key-one" (dxu:string-to-octets "value-one")))
+  (ensure (equalp (dxu:string-to-octets "value-one")
                   (dbm-get db "key-one" :octets)))
   ;; Keep
   (ensure-condition dbm-error
-    (dbm-put db "key-one" (string-as-octets "VALUE-TWO") :mode :keep))
-  (ensure (equalp (string-as-octets "value-one")
+    (dbm-put db "key-one" (dxu:string-to-octets "VALUE-TWO") :mode :keep))
+  (ensure (equalp (dxu:string-to-octets "value-one")
                   (dbm-get db "key-one" :octets)))
   ;; Replace
-  (ensure (dbm-put db "key-one" (string-as-octets "VALUE-TWO") :mode :replace))
-  (ensure (equalp (string-as-octets "VALUE-TWO")
+  (ensure (dbm-put db "key-one" (dxu:string-to-octets "VALUE-TWO")
+                   :mode :replace))
+  (ensure (equalp (dxu:string-to-octets "VALUE-TWO")
                   (dbm-get db "key-one" :octets)))
   ;; Concat
-  (ensure (dbm-put db "key-one" (string-as-octets "VALUE-THREE") :mode :concat))
-  (ensure (equalp (string-as-octets "VALUE-TWOVALUE-THREE")
+  (ensure (dbm-put db "key-one" (dxu:string-to-octets "VALUE-THREE")
+                   :mode :concat))
+  (ensure (equalp (dxu:string-to-octets "VALUE-TWOVALUE-THREE")
                   (dbm-get db "key-one" :octets))))
 
 (defun test-dbm-put-octets/string (db)
-  (let ((key (string-as-octets "key-one")))
+  (let ((key (dxu:string-to-octets "key-one")))
     ;; Add one
     (ensure (dbm-put db key "value-one"))
     (ensure (equal "value-one"  (dbm-get db key)))
