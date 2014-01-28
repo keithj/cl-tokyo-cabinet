@@ -157,18 +157,26 @@
 
 (defun test-dbm-put-string/string (db)
   ;; Add one
-  (ensure (dbm-put db "key-one" "value-one"))
-  (ensure (equal "value-one" (dbm-get db "key-one")))
+  (ensure (dbm-put db "key-one" "value-one")
+          :report "Failed to add a new string/string")
+  (ensure (equal "value-one" (dbm-get db "key-one"))
+          :report "Failed to get a string/string")
   ;; Keep
   (ensure-condition dbm-error
-    (dbm-put db "key-one" "VALUE-TWO" :mode :keep))
-  (ensure (equal "value-one" (dbm-get db "key-one")))
+    (dbm-put db "key-one" "VALUE-TWO" :mode :keep)
+    :report "Failed to add a duplicate string/string in :keep mode")
+  (ensure (equal "value-one" (dbm-get db "key-one"))
+          :report "Failed to keep a string/string in :keep mode")
   ;; Replace
-  (ensure (dbm-put db "key-one" "VALUE-TWO" :mode :replace))
-  (ensure (equal "VALUE-TWO" (dbm-get db "key-one")))
+  (ensure (dbm-put db "key-one" "VALUE-TWO" :mode :replace)
+          :report "Failed to add a string/string in :replace mode")
+  (ensure (equal "VALUE-TWO" (dbm-get db "key-one"))
+          :report "Failed to replace a string/string in :replace mode")
   ;; Concat
-  (ensure (dbm-put db "key-one" "VALUE-THREE" :mode :concat))
-  (ensure (equal "VALUE-TWOVALUE-THREE" (dbm-get db "key-one"))))
+  (ensure (dbm-put db "key-one" "VALUE-THREE" :mode :concat)
+          :report "Failed to add a string/string in :concat mode")
+  (ensure (equal "VALUE-TWOVALUE-THREE" (dbm-get db "key-one"))
+          :report "Failed to concatenate a string/string in :concat mode"))
 
 (defun test-dbm-put-string/octets (db)
   ;; Add one

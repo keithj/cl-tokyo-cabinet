@@ -1,5 +1,5 @@
 ;;;
-;;; Copyright (c) 2008-2011 Keith James. All rights reserved.
+;;; Copyright (c) 2008-2013 Keith James. All rights reserved.
 ;;;
 ;;; Redistribution and use in source and binary forms, with or without
 ;;; modification, are permitted provided that the following conditions
@@ -42,11 +42,13 @@
 
 (defsystem cl-tokyo-cabinet
     :name "Common Lisp Tokyo Cabinet"
-    :version "0.2.2"
+    :version "0.3.0"
     :author "Keith James"
     :licence "New BSD"
-    :depends-on ((:version :cffi "0.10.3"))
-    :in-order-to ((test-op (load-op :cl-tokyo-cabinet :cl-tokyo-cabinet-test)))
+    :depends-on ((:version :deoxybyte-systems "1.0.0")
+                 (:version :cffi "0.10.3"))
+    :in-order-to ((test-op (load-op :cl-tokyo-cabinet :cl-tokyo-cabinet-test))
+                  (doc-op (load-op :cl-tokyo-cabinet :cldoc)))
     :components ((:module :cl-tokyo-cabinet
                           :pathname "src/"
                           :components
@@ -63,7 +65,9 @@
                            (:file "tokyo-cabinet-hdb"
                                   :depends-on ("package"
                                                "tokyo-cabinet-ffi"
-                                               "tokyo-cabinet"))))
-                 (:lift-test-config :lift-tests
-                                    :pathname "cl-tokyo-cabinet-test"
-                                    :target-system :cl-tokyo-cabinet)))
+                                               "tokyo-cabinet")))))
+    :perform (test-op :after (op c)
+                      (maybe-run-lift-tests :cl-tokyo-cabinet
+                                            "cl-tokyo-cabinet-test.config"))
+    :perform (doc-op :after (op c)
+                     (maybe-build-cldoc-docs :cl-tokyo-cabinet "doc/html")))

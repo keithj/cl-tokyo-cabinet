@@ -2,7 +2,7 @@
 Introduction
 
 The cl-tokyo-cabinet system provides access to the Tokyo Cabinet DBM
-library by Mikio Hirabayashi, via CFFI. See http://1978th.net/tokyocabinet/
+library by Mikio Hirabayashi, via CFFI. See http://fallabs.com/tokyocabinet/
 
 This project started as an experiment to see what Tokyo Cabinet
 performance would be like when used from Common Lisp. Most of the BDB
@@ -35,7 +35,7 @@ asdf:operate function:
  (asdf:operate 'asdf:load-op :cl-tokyo-cabinet)
 
 or with the equivalent deoxybyte-systems:load-system function:
- 
+
  (dxs:load-system :cl-tokyo-cabinet)
 
 
@@ -53,9 +53,8 @@ or with the equivalent deoxybyte-systems:test-system function:
 
 cl-tokyo-cabinet is tested using:
 
- - SBCL 1.0.37 x86_64
- - CCL 1.5 x86_64
- - Tokyo Cabinet 1.4.43
+ - SBCL 1.1.14 x86_64
+ - Tokyo Cabinet 1.4.48
 
 
 Documentation

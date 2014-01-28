@@ -120,11 +120,11 @@
   (put-octets->string db key value (%bdb-put-fn mode)))
 ;; KTR
 
-(defmethod dbm-put ((db tc-bdb) (key string) (value string) 
+(defmethod dbm-put ((db tc-bdb) (key string) (value string)
                     &key (mode :replace))
   (put-string->string db key value (%bdb-str-put-fn mode)))
 
-(defmethod dbm-put ((db tc-bdb) (key string) (value vector) 
+(defmethod dbm-put ((db tc-bdb) (key string) (value vector)
                     &key (mode :replace))
   (put-string->octets db key value (%bdb-put-fn mode)))
 
@@ -170,7 +170,7 @@
 
 (defmethod iter-next ((iter bdb-iterator))
   (tcbdbcurnext (ptr-of iter)))
-  
+
 (defmethod iter-jump ((iter bdb-iterator) (key string))
   (tcbdbcurjump2 (ptr-of iter) key))
 
