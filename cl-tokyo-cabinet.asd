@@ -65,6 +65,10 @@
                            (:file "tokyo-cabinet-hdb"
                                   :depends-on ("package"
                                                "tokyo-cabinet-ffi"
+                                               "tokyo-cabinet"))
+                           (:file "tokyo-cabinet-fdb"
+                                  :depends-on ("package"
+                                               "tokyo-cabinet-ffi"
                                                "tokyo-cabinet")))))
     :perform (test-op :after (op c)
                       (maybe-run-lift-tests :cl-tokyo-cabinet

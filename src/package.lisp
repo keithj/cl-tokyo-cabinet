@@ -68,6 +68,7 @@
 
    #:bdb-open-flags
    #:hdb-open-flags
+   #:fdb-open-flags
    #:bdb-options
    #:hdb-options
    ;; Variables
@@ -172,7 +173,57 @@
 
    #:tchdbpath
    #:tchdbrnum
-   #:tchdbfsiz)
+   #:tchdbfsiz
+
+   #:tcfdberrmsg
+   #:tcfdbnew
+   #:tcfdbdel
+   #:tcfdbecode
+
+   #:tcfdbtune
+   #:tcfdbopen
+   #:tcfdbclose
+   #:tcfdbput
+   #:tcfdbput2
+   #:tcfdbput3
+   #:tcfdbputkeep
+   #:tcfdbputkeep2
+   #:tcfdbputkeep3
+   #:tcfdbputcat
+   #:tcfdbputcat2
+   #:tcfdbputcat3
+   #:tcfdbout
+   #:tcfdbout2
+   #:tcfdbout3
+   #:tcfdbget
+   #:tcfdbget2
+   #:tcfdbget3
+   #:tcfdbget4
+
+   #:tcfdbvsiz
+   #:tcfdbvsiz2
+   #:tcfdbvsiz3
+   #:tcfdbiterinit
+   #:tcfdbiternext
+   #:tcfdbiternext2
+   #:tcfdbiternext3
+
+   #:tcfdbrange
+   #:tcfdbaddint
+   #:tcfdbadddouble
+
+   #:tcfdbsync
+   #:tcfdboptimize
+   #:tcfdbvanish
+   #:tcfdbcopy
+
+   #:tcfdbtranbegin
+   #:tcfdbtrancommit
+   #:tcfdbtranabort
+
+   #:tcfdbpath
+   #:tcfdbrnum
+   #:tcfdbfsiz)
   (:documentation "CFFI interface to Tokyo Cabinet functions. The
   original C function names are preserved."))
 
@@ -187,6 +238,7 @@
    ;; Classes
    #:tc-bdb
    #:tc-hdb
+   #:tc-fdb
 
    ;; Conditions
    #:dbm-error

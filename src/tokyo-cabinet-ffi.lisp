@@ -88,6 +88,15 @@
   :noblock
   :tsync)
 
+(defbitfield fdb-open-flags
+  :read
+  :write
+  :create
+  :truncate
+  :nolock
+  :noblock
+  :tsync)
+
 (defbitfield bdb-options
   :large
   :deflate
@@ -692,3 +701,220 @@
 
 (defcfun ("tchdbfsiz" tchdbfsiz) :uint64
   (hdb :pointer))
+
+
+(defcfun ("tcfdberrmsg" tcfdberrmsg) :string
+  (ecode :int))
+
+(defcfun ("tcfdbnew" tcfdbnew) :pointer)
+
+(defcfun ("tcfdbdel" tcfdbdel) :void
+  (hdb :pointer))
+
+(defcfun ("tcfdbecode" tcfdbecode) :int
+  (hdb :pointer))
+
+;; (defcfun ("tcfdbsetmutex" tcfdbsetmutex) :boolean
+;;   (hdb :pointer))
+
+(cffi:defcfun ("tcfdbtune" tcfdbtune) :boolean
+  (fdb :pointer)
+  (width :int32)
+  (limsiz :int64))
+
+(cffi:defcfun ("tcfdbopen" tcfdbopen) :boolean
+  (fdb :pointer)
+  (path :string)
+  (omode fdb-open-flags))
+
+(cffi:defcfun ("tcfdbclose" tcfdbclose) :boolean
+  (fdb :pointer))
+
+(cffi:defcfun ("tcfdbput" tcfdbput) :boolean
+  (fdb :pointer)
+  (id :int64)
+  (vbuf :pointer)
+  (vsiz :int))
+
+(cffi:defcfun ("tcfdbput2" tcfdbput2) :boolean
+  (fdb :pointer)
+  (kbuf :pointer)
+  (ksiz :int)
+  (vbuf :pointer)
+  (vsiz :int))
+
+(cffi:defcfun ("tcfdbput3" tcfdbput3) :boolean
+  (fdb :pointer)
+  (kstr :string)
+  (vstr :pointer))
+
+(cffi:defcfun ("tcfdbputkeep" tcfdbputkeep) :boolean
+  (fdb :pointer)
+  (id :int64)
+  (vbuf :pointer)
+  (vsiz :int))
+
+(cffi:defcfun ("tcfdbputkeep2" tcfdbputkeep2) :boolean
+  (fdb :pointer)
+  (kbuf :pointer)
+  (ksiz :int)
+  (vbuf :pointer)
+  (vsiz :int))
+
+(cffi:defcfun ("tcfdbputkeep3" tcfdbputkeep3) :boolean
+  (fdb :pointer)
+  (kstr :string)
+  (vstr :pointer))
+
+(cffi:defcfun ("tcfdbputcat" tcfdbputcat) :boolean
+  (fdb :pointer)
+  (id :int64)
+  (vbuf :pointer)
+  (vsiz :int))
+
+(cffi:defcfun ("tcfdbputcat2" tcfdbputcat2) :boolean
+  (fdb :pointer)
+  (kbuf :pointer)
+  (ksiz :int)
+  (vbuf :pointer)
+  (vsiz :int))
+
+(cffi:defcfun ("tcfdbputcat3" tcfdbputcat3) :boolean
+  (fdb :pointer)
+  (kstr :string)
+  (vstr :pointer))
+
+(cffi:defcfun ("tcfdbout" tcfdbout) :boolean
+  (fdb :pointer)
+  (id :int64))
+
+(cffi:defcfun ("tcfdbout2" tcfdbout2) :boolean
+  (fdb :pointer)
+  (kbuf :pointer)
+  (ksiz :int))
+
+(cffi:defcfun ("tcfdbout3" tcfdbout3) :boolean
+  (fdb :pointer)
+  (kstr :string))
+
+(cffi:defcfun ("tcfdbget" tcfdbget) :pointer
+  (fdb :pointer)
+  (id :int64)
+  (sp :pointer))
+
+(cffi:defcfun ("tcfdbget2" tcfdbget2) :pointer
+  (fdb :pointer)
+  (kbuf :pointer)
+  (ksiz :int)
+  (sp :pointer))
+
+(cffi:defcfun ("tcfdbget3" tcfdbget3) :string
+  (fdb :pointer)
+  (kstr :string))
+
+;; (cffi:defcfun ("tcfdbget4" tcfdbget4) :int
+;;   (fdb :pointer)
+;;   (id :pointer)
+;;   (vbuf :pointer)
+;;   (max :int))
+
+(cffi:defcfun ("tcfdbvsiz" tcfdbvsiz) :int
+  (fdb :pointer)
+  (id :int64))
+
+(cffi:defcfun ("tcfdbvsiz2" tcfdbvsiz2) :int
+  (fdb :pointer)
+  (kbuf :pointer)
+  (ksiz :int))
+
+(cffi:defcfun ("tcfdbvsiz3" tcfdbvsiz3) :int
+  (fdb :pointer)
+  (kstr :string))
+
+(cffi:defcfun ("tcfdbiterinit" tcfdbiterinit) :boolean
+  (fdb :pointer))
+
+(cffi:defcfun ("tcfdbiternext" tcfdbiternext) :uint64
+  (fdb :pointer))
+
+(cffi:defcfun ("tcfdbiternext2" tcfdbiternext2) :pointer
+  (fdb :pointer)
+  (sp :pointer))
+
+(cffi:defcfun ("tcfdbiternext3" tcfdbiternext3) :string
+  (fdb :pointer))
+
+(cffi:defcfun ("tcfdbrange" tcfdbrange) :uint64
+  (fdb :pointer)
+  (lower :int64)
+  (upper :int64)
+  (max :int)
+  (np :pointer))
+
+;; (cffi:defcfun ("tcfdbrange2" tcfdbrange2) :pointer
+;;   (fdb :pointer)
+;;   (lbuf :pointer)
+;;   (lsiz :int)
+;;   (ubuf :pointer)
+;;   (usiz :int)
+;;   (max :int))
+
+;; (cffi:defcfun ("tcfdbrange3" tcfdbrange3) :pointer
+;;   (fdb :pointer)
+;;   (lstr :string)
+;;   (ustr :string)
+;;   (max :int))
+
+;; (cffi:defcfun ("tcfdbrange4" tcfdbrange4) :pointer
+;;   (fdb :pointer)
+;;   (ibuf :pointer)
+;;   (isiz :int)
+;;   (max :int))
+
+;; (cffi:defcfun ("tcfdbrange5" tcfdbrange5) :pointer
+;;   (fdb :pointer)
+;;   (istr :pointer)
+;;   (max :int))
+
+(cffi:defcfun ("tcfdbaddint" tcfdbaddint) :int
+  (fdb :pointer)
+  (id :int64)
+  (num :int))
+
+(cffi:defcfun ("tcfdbadddouble" tcfdbadddouble) :double
+  (fdb :pointer)
+  (id :int64)
+  (num :double))
+
+(cffi:defcfun ("tcfdbsync" tcfdbsync) :boolean
+  (fdb :pointer))
+
+(cffi:defcfun ("tcfdboptimize" tcfdboptimize) :pointer
+  (fdb :pointer)
+  (width :int32)
+  (limsiz :int64))
+
+(cffi:defcfun ("tcfdbvanish" tcfdbvanish) :boolean
+  (fdb :pointer))
+
+(cffi:defcfun ("tcfdbcopy" tcfdbcopy) :boolean
+  (fdb :pointer)
+  (path :string))
+
+(cffi:defcfun ("tcfdbtranbegin" tcfdbtranbegin) :boolean
+  (fdb :pointer))
+
+(cffi:defcfun ("tcfdbtrancommit" tcfdbtrancommit) :boolean
+  (fdb :pointer))
+
+(cffi:defcfun ("tcfdbtranabort" tcfdbtranabort) :boolean
+  (fdb :pointer))
+
+(cffi:defcfun ("tcfdbpath" tcfdbpath) :string
+  (fdb :pointer))
+
+(cffi:defcfun ("tcfdbrnum" tcfdbrnum) :uint64
+  (fdb :pointer))
+
+(cffi:defcfun ("tcfdbfsiz" tcfdbfsiz) :uint64
+  (fdb :pointer))

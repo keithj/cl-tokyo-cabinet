@@ -83,12 +83,16 @@
   ()
   (:documentation "A TC hash database."))
 
+(defclass tc-fdb (tc-dbm)
+  ()
+  (:documentation "A TC fixed-length database."))
+
 (defclass tc-iterator ()
   ((ptr :initarg :ptr
         :accessor ptr-of
         :documentation "A TC pointer."))
   (:documentation "A TC database iterator, the superclass of both B+
-tree cursors and hash iterators."))
+tree cursors, hash and fixed-length iterators."))
 
 (defclass bdb-iterator (tc-iterator)
   ()
@@ -98,6 +102,10 @@ tree cursors and hash iterators."))
   ((next-key :accessor next-key-of)
    (key-size :accessor key-size-of))
   (:documentation "A hash database iterator."))
+
+(defclass fdb-iterator (tc-iterator)
+  ((current-id :accessor current-id-of))
+  (:documentation "A fixed-length database iterator."))
 
 (defgeneric dbm-open (db filespec &rest mode)
   (:documentation "Opens a new, or existing TC database.
