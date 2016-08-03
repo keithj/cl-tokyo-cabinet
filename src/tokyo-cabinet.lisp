@@ -95,7 +95,7 @@ tree cursors and hash iterators."))
   (:documentation "A B+ tree database cursor."))
 
 (defclass hdb-iterator (tc-iterator)
-  ((next-key :accessor next-key-of)
+  ((next-key :accessor next-key-of :initform nil)
    (key-size :accessor key-size-of))
   (:documentation "A hash database iterator."))
 

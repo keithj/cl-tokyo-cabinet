@@ -142,24 +142,50 @@
       (raise-error db)))
 
 (defmethod iter-close ((iter hdb-iterator))
-  t)
+  (let ((key-ptr (next-key-of iter)))
+    (when (and key-ptr (not (null-pointer-p key-ptr)))
+      (foreign-free key-ptr))))
+
+(defmethod iter-first ((iter hdb-iterator))
+  (iter-next iter))
 
 (defmethod iter-next ((iter hdb-iterator))
+  (let ((key-ptr (next-key-of iter)))
+    (when (and key-ptr (not (null-pointer-p key-ptr)))
+      (foreign-free key-ptr)))
   (with-foreign-object (size-ptr :int)
     (let ((key-ptr (tchdbiternext (ptr-of iter) size-ptr)))
       (setf (next-key-of iter) key-ptr
             (key-size-of iter) size-ptr)
-      (null-pointer-p key-ptr))))
+      (not (null-pointer-p key-ptr)))))
 
 (defmethod iter-key ((iter hdb-iterator) &optional (type :string))
   (let ((key-ptr (next-key-of iter))
         (size-ptr (key-size-of iter)))
-    (unless (null-pointer-p key-ptr)
+    (when (and key-ptr (not (null-pointer-p key-ptr)))
       (ecase type
         (:string (foreign-string-to-lisp key-ptr :count
                                          (mem-ref size-ptr :int)))
         (:integer (mem-ref key-ptr :int32))
         (:octets (copy-foreign-value key-ptr size-ptr))))))
+
+(defmethod iter-get ((iter hdb-iterator) &optional (type :string))
+  (let ((key-ptr (next-key-of iter))
+        (value-ptr nil))
+    (when (and key-ptr (not (null-pointer-p key-ptr)))
+      (unwind-protect
+           (with-foreign-object (size-ptr :int)
+             (setf value-ptr (tchdbget (ptr-of iter) key-ptr
+                                       (mem-ref (key-size-of iter) :int)
+                                       size-ptr))
+             (unless (null-pointer-p value-ptr)
+               (ecase type
+                 (:string (foreign-string-to-lisp value-ptr :count
+                                                  (mem-ref size-ptr :int)))
+                 (:integer (mem-ref value-ptr :int32))
+                 (:octets (copy-foreign-value value-ptr size-ptr)))))
+        (when (and value-ptr (not (null-pointer-p value-ptr)))
+          (foreign-free value-ptr))))))
 
 (defmethod dbm-num-records ((db tc-hdb))
   (tchdbrnum (ptr-of db)))
