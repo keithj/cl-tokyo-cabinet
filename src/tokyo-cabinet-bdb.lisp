@@ -244,7 +244,8 @@
 
 (defmethod dbm-optimize ((db tc-bdb) &key (leaf 0) (non-leaf 0)
                          (bucket-size 0) (rec-align -1) (free-pool -1)
-                         (opts '(:defaults)))
+                         (opts '(:defaults))
+                         &allow-other-keys)
   (tcbdboptimize (ptr-of db) leaf non-leaf bucket-size rec-align
                  free-pool opts))
 
