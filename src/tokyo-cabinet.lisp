@@ -250,6 +250,17 @@ treated. :STRING indicates that the value should be converted to a
 Lisp string, while :OCTETS indicates that the byte vector should be
 returned."))
 
+(defgeneric iter-get-unsafe (iterator &optional type)
+  (:documentation "Returns the current value at ITERATOR. Type may be
+one of :STRING or :OCTETS , depending on how the value is to be
+treated. :STRING indicates that the value should be converted to a
+Lisp string, while :OCTETS indicates that the byte vector should be
+returned.
+Using volatile buffer thus thread-unsafe for other volatile operations
+done over this DB.")
+  (:method (iterator &optional type)
+    (iter-get iterator type)))
+
 (defgeneric iter-put (iterator value &key mode)
   (:documentation "Inserts VALUE around ITERATOR. Mode may be one
 of :CURRENT , :BEFORE or :AFTER . Only effective for B+ tree
@@ -266,6 +277,17 @@ may be one of :STRING or :OCTETS , depending on how the value is to be
 treated. :STRING indicates that the value should be converted to a
 Lisp string, while :OCTETS indicates that the byte vector should be
 returned."))
+
+(defgeneric iter-key-unsafe (iterator &optional type)
+  (:documentation "Returns current key at the ITERATOR position. Type
+may be one of :STRING or :OCTETS , depending on how the value is to be
+treated. :STRING indicates that the value should be converted to a
+Lisp string, while :OCTETS indicates that the byte vector should be
+returned.
+Using volatile buffer thus thread-unsafe for other volatile operations
+done over this DB.")
+  (:method (iterator &optional type)
+    (iter-key iterator type)))
 
 (defgeneric dbm-num-records (db)
   (:documentation "Returns the number of records in DB."))

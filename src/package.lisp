@@ -262,7 +262,9 @@
    #:iter-put
    #:iter-rem
    #:iter-key
+   #:iter-key-unsafe
    #:iter-get
+   #:iter-get-unsafe
    #:iter-close
    
    #:dbm-num-records

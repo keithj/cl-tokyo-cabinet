@@ -205,6 +205,16 @@
       (when (and value-ptr (not (null-pointer-p value-ptr)))
         (foreign-free value-ptr)))))
 
+(defmethod iter-get-unsafe ((iter bdb-iterator) &optional (type :string))
+  (with-foreign-object (size-ptr :int)
+    (let ((value-ptr (tcbdbcurval3 (ptr-of iter) size-ptr)))
+      (unless (null-pointer-p value-ptr)
+        (ecase type
+          (:string (foreign-string-to-lisp value-ptr :count
+                                           (mem-ref size-ptr :int)))
+          (:integer (mem-ref value-ptr :int32))
+          (:octets (copy-foreign-value value-ptr size-ptr)))))))
+
 (defmethod iter-put ((iter bdb-iterator) (value string)
                      &key (mode :current))
   (tcbdbcurput2 (ptr-of iter) value (%bdb-iter-mode mode)))
@@ -232,6 +242,16 @@
                (:octets (copy-foreign-value key-ptr size-ptr)))))
       (when (and key-ptr (not (null-pointer-p key-ptr)))
         (foreign-free key-ptr)))))
+
+(defmethod iter-key-unsafe ((iter bdb-iterator) &optional (type :string))
+  (with-foreign-object (size-ptr :int)
+    (let ((key-ptr (tcbdbcurkey3 (ptr-of iter) size-ptr)))
+      (unless (null-pointer-p key-ptr)
+        (ecase type
+          (:string (foreign-string-to-lisp key-ptr :count
+                                           (mem-ref size-ptr :int)))
+          (:integer (mem-ref key-ptr :int32))
+          (:octets (copy-foreign-value key-ptr size-ptr)))))))
 
 (defmethod dbm-num-records ((db tc-bdb))
   (tcbdbrnum (ptr-of db)))
